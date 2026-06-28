@@ -1,4 +1,19 @@
 <!DOCTYPE html>
+<!--
+  ════════════════════════════════════════════════════════════
+  MISSION CONTROL · BUILD QUEUE (remaining prompts) — for Claude Code
+  ════════════════════════════════════════════════════════════
+  DONE:  1 Scaffold/dashboard · 2 Supabase wiring · 3 Import 100 outreach companies · 4 Website Status panel
+  TODO:
+    - Prompt 5:  Add Email/Cron monitoring (Resend API)
+    - Prompt 6:  Add Client Revenue tracking
+    - Prompt 7:  Add storage bucket for avatar
+    - Prompt 8:  Add lead management page
+    - Prompt 9:  Add chatbot
+    - Prompt 10: Polish pass
+    - Prompt 11: Final deploy
+  ════════════════════════════════════════════════════════════
+-->
 <html lang="en-ZA">
 <head>
 <meta charset="UTF-8">
@@ -579,6 +594,48 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .cache-flag.show{display:flex}
 .cache-flag .cf-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none}
 @media(max-width:520px){.dnav{display:none}.refresh-btn{width:34px;height:34px}}
+
+/* ════════════════ WEBSITE STATUS (⑤) ════════════════ */
+.ss-summary{display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap;margin-bottom:var(--s5);position:relative;z-index:1}
+.ss-count{font-family:var(--mono);font-size:clamp(18px,4vw,24px);font-weight:800;color:var(--txt);white-space:nowrap;letter-spacing:-.02em}
+.ss-count #ssLiveCount{color:var(--green)}
+.ss-count .ss-of,.ss-count .ss-word{color:var(--txt-4);font-weight:600;font-size:.62em;letter-spacing:.04em}
+.ss-meter{flex:1;min-width:120px;height:8px;border-radius:var(--r-full);background:rgba(255,255,255,.05);overflow:hidden}
+.ss-meter i{display:block;height:100%;width:0;border-radius:var(--r-full);background:linear-gradient(90deg,var(--green-d),var(--green),var(--green-bright));box-shadow:0 0 12px var(--green-glow);transition:width .6s var(--t-slow)}
+.ss-check-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;border:none;font-family:var(--sans);font-weight:800;font-size:13px;letter-spacing:.02em;padding:11px 20px;border-radius:var(--r-full);cursor:pointer;min-height:44px;transition:transform var(--t-fast),box-shadow var(--t-fast),filter var(--t-fast);white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.ss-check-btn:hover{transform:translateY(-2px);box-shadow:var(--sh-glow);filter:brightness(1.08)}
+.ss-check-btn:active{transform:translateY(0)}
+.ss-check-btn:disabled{opacity:.65;cursor:wait;transform:none;filter:none;box-shadow:none}
+.ss-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(5,20,10,.35);border-top-color:#05140a;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
+
+.ss-group{margin-top:var(--s5);border-top:1px solid var(--border);padding-top:var(--s5)}
+.ss-group:first-child{border-top:none;padding-top:0;margin-top:0}
+.ss-group-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);margin-bottom:var(--s3)}
+.ss-group-title{font-size:12px;letter-spacing:.04em;font-weight:700;color:var(--txt-2);display:flex;align-items:center;gap:8px}
+.ss-group-stat{font-family:var(--mono);font-size:11px;color:var(--txt-3);white-space:nowrap}
+.ss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(244px,1fr));gap:var(--s3)}
+@media(max-width:520px){.ss-grid{grid-template-columns:1fr}}
+
+.ss-card{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--s4);border:1px solid var(--border);border-radius:var(--r-md);background:var(--glass);text-decoration:none;color:var(--txt);transition:background var(--t-fast),border-color var(--t-fast),transform var(--t-fast);min-width:0}
+.ss-card:hover{background:var(--glass-2);border-color:var(--border-glow);transform:translateY(-2px)}
+@media(hover:none){.ss-card:hover{transform:none}}
+.ss-card-body{flex:1;min-width:0}
+.ss-name{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ss-url{display:block;font-family:var(--mono);font-size:10px;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.ss-code{font-family:var(--mono);font-size:10px;color:var(--txt-4);white-space:nowrap;flex:0 0 auto;min-width:30px;text-align:right}
+.ss-dot{width:11px;height:11px;flex:0 0 auto;border-radius:50%;background:var(--txt-4);transition:background var(--t-base),box-shadow var(--t-base)}
+.ss-dot.up{background:var(--green);box-shadow:0 0 10px var(--green-glow)}
+.ss-dot.down{background:var(--red);box-shadow:0 0 10px var(--red-subtle),0 0 6px rgba(251,93,116,.5)}
+.ss-dot.pending{background:var(--txt-4)}
+.ss-dot.checking{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pulse 1s ease-in-out infinite}
+
+.ss-empty{font-size:12px;color:var(--txt-4);font-family:var(--mono);padding:var(--s3) 0}
+.ss-note{font-size:11px;color:var(--txt-4);margin-top:var(--s6);line-height:1.7;border-top:1px solid var(--border);padding-top:var(--s4);position:relative;z-index:1}
+.ss-note .ss-leg{display:inline-flex;align-items:center;gap:6px;margin-right:var(--s4);white-space:nowrap}
+.ss-note .ss-leg i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.ss-note .ss-leg i.up{background:var(--green)}
+.ss-note .ss-leg i.down{background:var(--red)}
+.ss-note .ss-leg i.pending{background:var(--txt-4)}
 </style>
 </head>
 <body>
@@ -620,6 +677,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
         <a href="#war"><span class="qn">01</span> Debt freedom</a>
         <a href="#pipelineSection"><span class="qn">02</span> Pipeline health</a>
         <a href="#revenueSection"><span class="qn">03</span> Revenue to freedom</a>
+        <a href="#siteStatusSection"><span class="qn">05</span> Site status</a>
       </nav>
       <div class="status" aria-live="polite">
         <span class="dot" id="statusDot" aria-hidden="true"></span>
@@ -957,6 +1015,37 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
 
         <div class="tab-content" id="tab-pack" role="tabpanel">
           <div id="packContent">Loading outreach pack…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECISION 05 · WEBSITE STATUS -->
+    <div class="section" id="siteStatusSection">
+      <div class="panel" id="siteStatus" role="region" aria-label="Website status monitor">
+        <div class="panel-head">
+          <span class="panel-label"><span class="ic">⑤</span> Website Status</span>
+          <span class="panel-tag" id="siteStatusStamp">not checked yet</span>
+        </div>
+        <div class="ss-summary">
+          <div class="ss-count" aria-live="polite">
+            <span id="ssLiveCount">—</span> <span class="ss-of">of</span>
+            <span id="ssTotalCount">—</span> <span class="ss-word">sites live</span>
+          </div>
+          <div class="ss-meter" role="progressbar" aria-label="Sites live" aria-valuemin="0" aria-valuemax="100">
+            <i id="ssMeterFill"></i>
+          </div>
+          <button class="ss-check-btn" id="ssCheckAll" type="button" aria-label="Ping every site and refresh status">▶ Check All</button>
+        </div>
+        <div id="ssGroups">
+          <div class="ss-empty">Loading sites…</div>
+        </div>
+        <div class="ss-note">
+          <span class="ss-leg"><i class="up"></i> live / reachable</span>
+          <span class="ss-leg"><i class="down"></i> error / unreachable</span>
+          <span class="ss-leg"><i class="pending"></i> not checked</span>
+          <br>
+          Niche sites are pulled live from Supabase (<code>outreach_companies.demo_site_url</code>); masters &amp; platform are fixed.
+          Status is best-effort from the browser — a real HTTP code shows when the site allows cross-origin checks, otherwise the dot reflects whether the host responded at all.
         </div>
       </div>
     </div>
@@ -1719,6 +1808,189 @@ function renderOutreachPack(text){
   $("#packContent").innerHTML=html||'<pre class="template-view">'+esc(text)+'</pre>';
 }
 
+/* ════════════════ WEBSITE STATUS (⑤) ════════════════ */
+// Niche sections come live from Supabase (outreach_companies.demo_site_url).
+// These groups are the fixed infrastructure that doesn't live in that table:
+// the 6 master demos (pest + 5 niche masters) and the platform itself.
+const SS_NICHE_GROUPS = [
+  {key:"pest control", title:"🐜 Pest Control"},
+  {key:"plumbers",     title:"🔧 Plumbers"},
+  {key:"electricians", title:"⚡ Electricians"},
+  {key:"roofers",      title:"🏠 Roofers"},
+  {key:"gardeners",    title:"🌿 Gardeners"},
+];
+const SS_INFRA = {
+  title:"🛰️ Masters & Platform",
+  sites:[
+    {name:"Cape Pest Shield · pest master",        url:"https://cape-pest-shield.vercel.app"},
+    {name:"Cape Flow Plumbing · plumbers master",  url:"https://cape-flow-plumbing-rose.vercel.app"},
+    {name:"Cape Current Electrical · elec master", url:"https://cape-current-electrical.vercel.app"},
+    {name:"Cape Apex Roofing · roofers master",    url:"https://cape-apex-roofing.vercel.app"},
+    {name:"Cape Gleam Cleaning · cleaners master", url:"https://cape-gleam-cleaning.vercel.app"},
+    {name:"Cape Bloom Gardens · gardens master",   url:"https://cape-bloom-gardens.vercel.app"},
+    {name:"Mission Control · War Room",            url:"https://mission-control-neon-eta.vercel.app"},
+  ]
+};
+const SS_CACHE_KEY = "mc_site_status_v1";   // { checkedAt:<ms>, results:{ url:{status,code} } }
+let SS_CHECKING = false;
+
+function ssReadCache(){ try{ return JSON.parse(sessionStorage.getItem(SS_CACHE_KEY))||{}; }catch(_){ return {}; } }
+function ssWriteCache(o){ try{ sessionStorage.setItem(SS_CACHE_KEY, JSON.stringify(o)); }catch(_){ } }
+
+// Build the display model: live niche groups from Supabase + the fixed infra group.
+function ssBuildGroups(){
+  const mapped=(STATE.companies||[]).map(mapCompany);
+  const groups=SS_NICHE_GROUPS.map(g=>{
+    const seen=new Set(), sites=[];
+    mapped.filter(c=>c.niche===g.key && c.site_url).forEach(c=>{
+      const u=String(c.site_url).trim();
+      if(!u || seen.has(u)) return; seen.add(u);
+      sites.push({name:c.company_name, url:u});
+    });
+    sites.sort((a,b)=>a.name.localeCompare(b.name));
+    return {title:g.title, sites};
+  });
+  groups.push({title:SS_INFRA.title, sites:SS_INFRA.sites.slice()});
+  return groups;
+}
+
+// ── PING: layered, best-effort cross-origin reachability ──
+// 1) real CORS HEAD → reads a true HTTP status when the host allows it (most accurate)
+// 2) no-cors GET   → opaque; resolves if the host answered at all, rejects on network/DNS failure
+// 3) Image() probe → last resort when fetch is blocked outright
+function ssTimeout(ms){
+  const c=new AbortController(); const id=setTimeout(()=>c.abort(), ms);
+  return {signal:c.signal, clear:()=>clearTimeout(id)};
+}
+function ssImgProbe(url, ms){
+  return new Promise(resolve=>{
+    const img=new Image(); let done=false;
+    const fin=r=>{ if(done) return; done=true; clearTimeout(tm); img.onload=img.onerror=null; try{img.src="";}catch(_){} resolve(r); };
+    const tm=setTimeout(()=>fin(false), ms);
+    img.onload=()=>fin(true); img.onerror=()=>fin(false);
+    img.src=url+(url.includes("?")?"&":"?")+"mc_ping="+Math.floor(performance.now());
+  });
+}
+async function ssPing(url){
+  const TIMEOUT=5000;
+  try{
+    const t=ssTimeout(TIMEOUT);
+    const res=await fetch(url,{method:"HEAD",mode:"cors",cache:"no-store",redirect:"follow",signal:t.signal});
+    t.clear();
+    return {status:res.ok?"up":"down", code:String(res.status)};
+  }catch(_){ /* CORS-blocked or network — try a reachability probe */ }
+  try{
+    const t=ssTimeout(TIMEOUT);
+    await fetch(url,{method:"GET",mode:"no-cors",cache:"no-store",signal:t.signal});
+    t.clear();
+    return {status:"up", code:"live"};
+  }catch(_){ /* fall through to image probe */ }
+  const ok=await ssImgProbe(url,TIMEOUT);
+  return ok ? {status:"up", code:"live"} : {status:"down", code:"down"};
+}
+
+// ── RENDER ──
+function ssRender(){
+  const host=$("#ssGroups"); if(!host) return;
+  const results=(ssReadCache().results)||{};
+  const groups=ssBuildGroups();
+  host.innerHTML=groups.map(g=>{
+    if(!g.sites.length){
+      return `<div class="ss-group"><div class="ss-group-head"><span class="ss-group-title">${g.title}</span><span class="ss-group-stat">no sites</span></div><div class="ss-empty">No demo sites in this niche yet.</div></div>`;
+    }
+    const cards=g.sites.map(s=>{
+      const r=results[s.url];
+      const cls=r?r.status:"pending";
+      const code=r?r.code:"—";
+      const display=String(s.url).replace(/^https?:\/\//,"").replace(/\/$/,"");
+      return `<a class="ss-card" href="${esc(s.url)}" target="_blank" rel="noopener" data-ss-url="${esc(s.url)}" title="${esc(s.url)}">
+        <span class="ss-dot ${cls}"></span>
+        <span class="ss-card-body"><span class="ss-name">${esc(s.name)}</span><span class="ss-url">${esc(display)} ↗</span></span>
+        <span class="ss-code">${esc(code)}</span>
+      </a>`;
+    }).join("");
+    return `<div class="ss-group"><div class="ss-group-head"><span class="ss-group-title">${g.title}</span><span class="ss-group-stat"></span></div><div class="ss-grid">${cards}</div></div>`;
+  }).join("");
+  ssRecount();
+  ssSetStamp();
+}
+
+// Counts are driven off the rendered dots so they always match what's on screen,
+// even mid-check. URLs are de-duplicated globally for the headline total.
+function ssRecount(){
+  const seen=new Map();
+  $$("#ssGroups .ss-card").forEach(c=>{
+    const u=c.dataset.ssUrl, cl=c.querySelector(".ss-dot").classList;
+    const s=cl.contains("up")?"up":cl.contains("down")?"down":"pending";
+    if(!seen.has(u)) seen.set(u,s);
+  });
+  let up=0, checked=0; const total=seen.size;
+  seen.forEach(s=>{ if(s==="up"){up++;checked++;} else if(s==="down") checked++; });
+  const liveEl=$("#ssLiveCount"), totEl=$("#ssTotalCount"), meter=$("#ssMeterFill");
+  if(liveEl) liveEl.textContent = checked? up : "—";
+  if(totEl)  totEl.textContent  = total;
+  if(meter)  meter.style.width  = (total? (checked?up/total:0)*100 : 0)+"%";
+  const meterWrap=meter&&meter.parentElement; if(meterWrap) meterWrap.setAttribute("aria-valuenow", total?Math.round((checked?up/total:0)*100):0);
+  // per-group stat
+  $$("#ssGroups .ss-group").forEach(grp=>{
+    const gcards=[...grp.querySelectorAll(".ss-card")];
+    const stat=grp.querySelector(".ss-group-stat"); if(!stat) return;
+    if(!gcards.length){ return; }
+    let gUp=0,gChecked=0;
+    gcards.forEach(c=>{ const cl=c.querySelector(".ss-dot").classList; if(cl.contains("up")){gUp++;gChecked++;} else if(cl.contains("down")) gChecked++; });
+    stat.innerHTML = gChecked ? `<span class="grn">${gUp}</span>/${gcards.length} live` : `${gcards.length} site${gcards.length===1?"":"s"}`;
+  });
+}
+function ssSetStamp(){
+  const el=$("#siteStatusStamp"); if(!el) return;
+  const c=ssReadCache();
+  el.textContent = c.checkedAt ? ("checked "+relTime(new Date(c.checkedAt))) : "not checked yet";
+}
+
+// Simple concurrency pool so 100+ pings stay smooth and polite.
+async function ssRunPool(items, worker, concurrency){
+  let i=0;
+  const runners=Array.from({length:Math.min(concurrency, items.length||1)}, async ()=>{
+    while(i<items.length){ const idx=i++; await worker(items[idx]); }
+  });
+  await Promise.all(runners);
+}
+
+async function ssCheckAll(){
+  if(SS_CHECKING) return;
+  SS_CHECKING=true;
+  const btn=$("#ssCheckAll");
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="ss-spin" aria-hidden="true"></span> Checking…'; }
+  // group cards by URL (a URL can appear in more than one card)
+  const byUrl=new Map();
+  $$("#ssGroups .ss-card").forEach(c=>{
+    const u=c.dataset.ssUrl; if(!byUrl.has(u)) byUrl.set(u,[]); byUrl.get(u).push(c);
+    const d=c.querySelector(".ss-dot"); d.classList.remove("up","down","pending"); d.classList.add("checking");
+    const cd=c.querySelector(".ss-code"); if(cd) cd.textContent="···";
+  });
+  ssRecount();
+  const results=(ssReadCache().results)||{};
+  const urls=[...byUrl.keys()];
+  await ssRunPool(urls, async (u)=>{
+    const r=await ssPing(u);
+    results[u]=r;
+    (byUrl.get(u)||[]).forEach(c=>{
+      const d=c.querySelector(".ss-dot"); d.classList.remove("checking","up","down","pending"); d.classList.add(r.status);
+      const cd=c.querySelector(".ss-code"); if(cd) cd.textContent=r.code;
+    });
+    ssRecount();
+  }, 8);
+  ssWriteCache({checkedAt:Date.now(), results});
+  ssRecount(); ssSetStamp();
+  if(btn){ btn.disabled=false; btn.innerHTML="↻ Re-check All"; }
+  SS_CHECKING=false;
+  toast("Site status updated ✓");
+}
+function initSiteStatus(){
+  const btn=$("#ssCheckAll"); if(btn) btn.addEventListener("click", ssCheckAll);
+  ssRender();
+}
+
 /* ════════════════ DATA ORCHESTRATION ════════════════ */
 function applyData(){
   hasRenderedOnce = true;
@@ -1731,6 +2003,7 @@ function applyData(){
   renderActivity();
   drawTrajectoryChart();
   drawRevenueTimeline();
+  if(!SS_CHECKING) ssRender();   // refresh site list from latest companies (keeps cached statuses)
   ANIM_ON = false;            // entrance count-up done; background refreshes update silently
 }
 
@@ -1775,6 +2048,7 @@ function boot(){
   initNicheSelector();
   initQuickActions();
   initRefresh();
+  initSiteStatus();
   loadOutreachPack();
 
   // restore device-local state
