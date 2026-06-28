@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* ════════════════════════════════════════════════════════════
    MISSION CONTROL · Debt Freedom OS
@@ -550,6 +551,34 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
   .status .dot{animation:none;opacity:1}#warDays{text-shadow:none}#mesh{animation:none}
 }
+
+/* ════════════════ DATA-SYNC ADDITIONS ════════════════ */
+.refresh-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;margin-left:8px;padding:0;
+  background:var(--glass-2);border:1px solid var(--border);border-radius:var(--r-full);
+  color:var(--txt-2);font-size:15px;line-height:1;cursor:pointer;
+  transition:all var(--t-fast);-webkit-tap-highlight-color:transparent;
+}
+.refresh-btn:hover{background:var(--surface-3);color:var(--txt);border-color:var(--border-2)}
+.refresh-btn:active{transform:scale(.92)}
+.refresh-btn.spin svg{animation:spin .8s linear infinite}
+.refresh-btn svg{width:15px;height:15px;display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status .dot.stale{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.status .dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
+#liveStamp.stale{color:var(--amber)}
+#liveStamp.err{color:var(--red)}
+.cache-flag{
+  display:none;align-items:center;gap:6px;
+  margin:0 auto var(--s5);max-width:560px;
+  background:var(--amber-subtle);border:1px solid rgba(251,191,36,.3);
+  color:var(--amber);font-size:12px;font-weight:600;
+  padding:9px 16px;border-radius:var(--r-full);text-align:center;justify-content:center;
+}
+.cache-flag.show{display:flex}
+.cache-flag .cf-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none}
+@media(max-width:520px){.dnav{display:none}.refresh-btn{width:34px;height:34px}}
 </style>
 </head>
 <body>
@@ -593,13 +622,23 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
         <a href="#revenueSection"><span class="qn">03</span> Revenue to freedom</a>
       </nav>
       <div class="status" aria-live="polite">
-        <span class="dot" aria-hidden="true"></span>
-        <span id="liveStamp">live</span>
+        <span class="dot" id="statusDot" aria-hidden="true"></span>
+        <span id="liveStamp">connecting…</span>
+        <button id="refreshBtn" class="refresh-btn" title="Refresh data from database" aria-label="Refresh data from database">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
 
   <div class="wrap">
+
+    <div class="cache-flag" id="cacheFlag" role="status">
+      <span class="cf-dot" aria-hidden="true"></span>
+      <span id="cacheFlagText">Showing cached data — couldn't reach the database. Tap refresh to retry.</span>
+    </div>
 
     <!-- ═══ DECISION 01 · THE WAR (HERO) ═══ -->
     <section class="section" id="war" style="padding-top:0" role="region" aria-label="Days to debt freedom">
@@ -622,7 +661,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
       <div class="kpi-card">
         <div class="kc-label">⚔️ Attacking debt / mo</div>
         <div class="kc-value grn" id="stripAttack">R0</div>
-        <div class="kc-sub">income − burn − min</div>
+        <div class="kc-sub">income − burn (avalanche)</div>
       </div>
       <div class="kpi-card">
         <div class="kc-label">🛟 Cash runway</div>
@@ -712,7 +751,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
       <div class="panel" id="revenueSection" role="region" aria-label="Revenue tracker">
         <div class="panel-head">
           <span class="panel-label"><span class="ic">③</span> Revenue Tracker</span>
-          <span class="panel-tag">MRR · saved locally</span>
+          <span class="panel-tag">MRR · synced to cloud</span>
         </div>
         <div class="mrr-input-row">
           <span class="mrr-currency" aria-hidden="true">R</span>
@@ -810,18 +849,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
     <div class="section" id="pipelineSection">
       <div class="section-head">
         <span class="eyebrow"><span class="num">02</span> Is my outreach pipeline healthy?</span>
-        <div class="section-q">Outreach pipeline <span class="dim">· 100 targets across 5 niches</span></div>
+        <div class="section-q">Outreach pipeline <span class="dim">· live from Supabase · 5 niches</span></div>
       </div>
       <div class="panel" id="pipeline" role="region" aria-label="Outreach pipeline">
         <div class="panel-head">
           <span class="panel-label"><span class="ic">②</span> Pipeline</span>
           <div class="niche-select-wrap">
             <select class="niche-select" id="nicheSelect" aria-label="Select niche">
-              <option value="pest">🐜 Pest Control</option>
+              <option value="all">🎯 All niches</option>
+              <option value="pest control">🐜 Pest Control</option>
               <option value="plumbers">🔧 Plumbers</option>
               <option value="electricians">⚡ Electricians</option>
               <option value="roofers">🏠 Roofers</option>
-              <option value="gardens">🌿 Garden Services</option>
+              <option value="gardeners">🌿 Gardeners</option>
             </select>
           </div>
         </div>
@@ -922,8 +962,8 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
     </div>
 
     <footer role="contentinfo">
-      Private dashboard · noindex · passcode-gated (obscurity, not encryption — data lives in this page).<br>
-      Change passcode &amp; refresh data: see <code>README.md</code>. Pipeline from <code>pipeline.json</code> / <code>crm-export.json</code>.
+      Private dashboard · noindex · passcode-gated (obscurity, not encryption).<br>
+      Live data from <code>Supabase</code> · cached in this session · MRR synced to <code>revenue_log</code>. Change passcode: see <code>README.md</code>.
     </footer>
   </div>
 </div>
@@ -935,127 +975,113 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
 // Passcode: SHA-256 hash. Default: "debtfree"
 const PASS_HASH = "6e858f1fe9bb5b0099a8ff51f0aeb25fe686f8068e4b54512b354bd9f6efa5bf";
 
-const DEBT_ACCOUNTS = [
-  { name:"Nedbank Credit",          balance:7975,   apr:1.75, minPay:610  },
-  { name:"Absa Credit Card 2",      balance:66877,  apr:1.75, minPay:2078 },
-  { name:"Absa Credit Card 1",      balance:110004, apr:1.75, minPay:3301 },
-  { name:"Capitec Access Facility", balance:113743, apr:1.75, minPay:6428 },
-  { name:"Capitec Credit",          balance:50611,  apr:1.67, minPay:3002 },
-  { name:"Absa Personal Loan",      balance:129008, apr:1.44, minPay:4522 },
-  { name:"Absa Car Loan",           balance:45825,  apr:1.02, minPay:3947 },
-];
-const TOTAL_DEBT     = 524043;
-const MONTHLY_BURN   = 10596;
-const MONTHLY_INCOME = 35000;
-const CASH_ON_HAND   = 140000;
-const MIN_PAYMENTS   = 23888;
-const RUNWAY_MONTHS  = 13.2;
-const BREAKEVEN      = MONTHLY_BURN;
-const FREEDOM_MRR    = 74000;
-const BASE_TO_DEBT   = MONTHLY_INCOME - MONTHLY_BURN;
+/* ──────────── SUPABASE (anon, browser-side) ──────────── */
+const SUPABASE_URL  = "https://xmlhrfhjxwmkupbaoddp.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtbGhyZmhqeHdta3VwYmFvZGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjU2MDUsImV4cCI6MjA5ODI0MTYwNX0.Urvd7YL2Wv-I0ut4iAmjCxgf92bcKI974muo-_BeQS0";
+let sb = null;
+try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
+catch(e){ console.warn("Supabase client failed to initialise", e); }
 
-/* ════════════════ NICHE DATA ════════════════ */
-const STATUS_MAP = {nc:"not_contacted",cs:"cold_sent",f1:"followup_1_sent",f2:"followup_2_sent",re:"replied",wo:"won"};
-const NICHE_DEAL  = {pest:5000,plumbers:5000,electricians:5000,roofers:6000,gardens:4000};
-const NICHE_LABEL = {pest:"Pest Control",plumbers:"Plumbers",electricians:"Electricians",roofers:"Roofers",gardens:"Garden Services"};
+/* ──────────── LIVE STATE — everything comes from the database ──────────── */
+const STATE = { debt:[], companies:[], revenue:[], activity:[], finance:null };
+let ANIM_ON = true;          // count-up animation only on first paint
+let hasRenderedOnce = false;
 
-// Compact tuples: [name, suburb, status, next_action_date]
-const NICHE_RAW = {
-  plumbers:[
-    ["Cape Drain Doctors","Goodwood","re","2026-06-30"],["AquaFix Plumbing","Bellville","cs","2026-06-29"],
-    ["Pipeline Pros","Parow","f1","2026-07-01"],["Tap & Geyser Co","Milnerton","cs","2026-06-30"],
-    ["Mother City Plumbers","Observatory","nc",null],["BlueFlow Plumbing","Claremont","f2","2026-06-30"],
-    ["Rapid Rooter CT","Kraaifontein","nc",null],["Geyser Guru","Durbanville","re","2026-07-02"],
-    ["Leakstop Solutions","Brackenfell","nc",null],["Atlantic Plumbing","Sea Point","cs","2026-06-29"],
-    ["Southern Pipe Works","Wynberg","nc",null],["PlumbRight","Table View","nc",null],
-    ["City Bowl Plumbers","City Centre","f1","2026-07-01"],["Drainmasters CT","Athlone","nc",null],
-    ["HotWater Heroes","Bothasig","nc",null],["Pressure Point Plumbing","Edgemead","cs","2026-06-30"],
-    ["ClearFlow Plumbing","Pinelands","nc",null],["West Coast Plumbing","Bloubergstrand","nc",null],
-    ["Reliable Rooter","Mitchells Plain","nc",null],["EverFlow Plumbing","Plumstead","nc",null]
-  ],
-  electricians:[
-    ["Sparks Electrical","Maitland","cs","2026-06-30"],["Voltage Pros","Bellville","nc",null],
-    ["Cape Current Electric","Goodwood","f1","2026-07-01"],["BrightWire CT","Claremont","nc",null],
-    ["PowerHouse Electrical","Parow","cs","2026-06-29"],["SafeVolt Electricians","Durbanville","nc",null],
-    ["Live Wire Solutions","Milnerton","re","2026-07-02"],["Ampere Electric","Observatory","nc",null],
-    ["Surge Electrical CT","Kraaifontein","nc",null],["CircuitCare","Brackenfell","cs","2026-06-30"],
-    ["Atlantic Sparks","Sea Point","nc",null],["Southern Volt","Wynberg","nc",null],
-    ["CityLight Electric","City Centre","nc",null],["WattWorks","Athlone","nc",null],
-    ["Beacon Electrical","Table View","nc",null],["FuseBox Pros","Edgemead","nc",null],
-    ["CurrentFlow Electric","Pinelands","nc",null],["West Coast Wiring","Bloubergstrand","nc",null],
-    ["Ohm Electrical","Mitchells Plain","nc",null],["Spark City","Plumstead","nc",null]
-  ],
-  roofers:[
-    ["Cape Roof Doctors","Goodwood","cs","2026-06-30"],["Apex Roofing CT","Bellville","f1","2026-07-01"],
-    ["Summit Roof Repairs","Parow","nc",null],["WaterTight Roofing","Milnerton","cs","2026-06-29"],
-    ["Table Mountain Roofing","Observatory","nc",null],["StormGuard Roofs","Durbanville","re","2026-07-02"],
-    ["Atlantic Roofing","Sea Point","nc",null],["Peak Roof Solutions","Claremont","nc",null],
-    ["Southern Roof Co","Wynberg","cs","2026-06-30"],["SkyLine Roofing","Kraaifontein","nc",null],
-    ["RidgeLine Roofers","Brackenfell","nc",null],["CityTop Roofing","City Centre","nc",null],
-    ["ClearSky Roofing","Athlone","nc",null],["Beacon Roofing","Table View","nc",null],
-    ["West Coast Roofing","Bloubergstrand","nc",null],["Crown Roof Repairs","Edgemead","nc",null],
-    ["Shelter Roofing CT","Pinelands","nc",null],["SolidRoof Solutions","Mitchells Plain","nc",null],
-    ["Horizon Roofing","Plumstead","nc",null],["AllWeather Roofs","Bothasig","nc",null]
-  ],
-  gardens:[
-    ["GreenScape Gardens","Constantia","cs","2026-06-30"],["Cape Garden Care","Tokai","nc",null],
-    ["EverGreen Services","Bishopscourt","f1","2026-07-01"],["Leaf & Lawn CT","Newlands","nc",null],
-    ["Mother City Gardens","Rondebosch","cs","2026-06-29"],["Bloom Garden Services","Claremont","re","2026-07-02"],
-    ["Garden Pro CT","Durbanville","nc",null],["TreeTop Gardens","Hout Bay","nc",null],
-    ["Southern Greens","Wynberg","cs","2026-06-30"],["Atlantic Landscaping","Sea Point","nc",null],
-    ["FreshCut Gardens","Milnerton","nc",null],["NatureWorks CT","Table View","nc",null],
-    ["City Garden Care","City Centre","nc",null],["Verdant Gardens","Pinelands","nc",null],
-    ["West Coast Gardens","Bloubergstrand","nc",null],["GreenThumb Services","Edgemead","nc",null],
-    ["Oasis Garden Care","Bothasig","nc",null],["Petal & Pine","Plumstead","nc",null],
-    ["Lush Landscapes CT","Kenilworth","nc",null],["EcoGarden Solutions","Mitchells Plain","nc",null]
-  ]
-};
+// Financial figures — derived from STATE after every load (no hardcoded data).
+let DEBT_ACCOUNTS = [];
+let TOTAL_DEBT=0, MIN_PAYMENTS=0, MONTHLY_BURN=0, MONTHLY_INCOME=0,
+    CASH_ON_HAND=0, RUNWAY_MONTHS=0, BREAKEVEN=0, FREEDOM_MRR=74000, BASE_TO_DEBT=0;
 
-const FALLBACK_PIPELINE = {
-  generated:"2026-06-28", niche:"Pest Control", default_deal_value_zar:5000,
-  companies:[
-    {company_name:"Verminator Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Boquinar Industrial"},
-    {company_name:"SM Services & Projects",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"City Centre"},
-    {company_name:"Wanga Hygiene Solutions",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Cape Town"},
-    {company_name:"Plane Clean (Filteq)",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Observatory"},
-    {company_name:"NRE Pest Control & Hygiene",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Kenilworth"},
-    {company_name:"Evolution Pest & Hygiene",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Cape Town"},
-    {company_name:"Bird Deterrent Specialists",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Plumstead"},
-    {company_name:"KOVA Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Cape Town"},
-    {company_name:"Connor Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"City Centre"},
-    {company_name:"Kilpest",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000,suburb:"Cape Town"}
-  ]
-};
-
-const NICHE_DATA = {};       // filled at boot
-let CURRENT_NICHE = "pest";
-let PIPELINE_MRR = 0;
-
-function slugify(name){
-  return name.toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+function recompute(){
+  const f = STATE.finance || {};
+  DEBT_ACCOUNTS = (STATE.debt||[]).map(a=>({
+    name:a.name, balance:+a.balance, apr:+a.apr, minPay:+a.min_pay, target:!!a.target_flag
+  })).sort((a,b)=> (b.apr-a.apr) || (a.balance-b.balance));   // avalanche order
+  TOTAL_DEBT     = DEBT_ACCOUNTS.reduce((s,a)=>s+a.balance,0);
+  MIN_PAYMENTS   = DEBT_ACCOUNTS.reduce((s,a)=>s+a.minPay,0);
+  MONTHLY_BURN   = +f.monthly_burn_zar   || 0;
+  MONTHLY_INCOME = +f.monthly_income_zar || 0;
+  CASH_ON_HAND   = +f.cash_zar           || 0;
+  BREAKEVEN      = +f.break_even_zar      || MONTHLY_BURN;
+  FREEDOM_MRR    = +f.freedom_mrr_zar     || 74000;
+  RUNWAY_MONTHS  = +f.runway_months || (MONTHLY_BURN ? CASH_ON_HAND/MONTHLY_BURN : 0);
+  BASE_TO_DEBT   = MONTHLY_INCOME - MONTHLY_BURN;   // attacks debt before any client revenue
 }
-function expandNiche(key){
-  const deal = NICHE_DEAL[key];
-  const label = NICHE_LABEL[key];
+
+/* ──────────── SESSION CACHE (instant paint, fewer DB reads) ──────────── */
+const CACHE_KEY = "mc_cache_v2";
+function readCache(){ try { return JSON.parse(sessionStorage.getItem(CACHE_KEY)); } catch(_){ return null; } }
+function writeCache(d){ try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({debt:d.debt,companies:d.companies,revenue:d.revenue,activity:d.activity,finance:d.finance})); } catch(_){ } }
+function hasData(){ return !!(STATE.finance || (STATE.debt && STATE.debt.length)); }
+
+/* ──────────── FETCH ALL FIVE TABLES ──────────── */
+async function fetchAll(){
+  if(!sb) throw new Error("Supabase client unavailable");
+  const [debt, companies, revenue, activity, finance] = await Promise.all([
+    sb.from("debt_accounts").select("*"),
+    sb.from("outreach_companies").select("*"),
+    sb.from("revenue_log").select("*").order("month",{ascending:false}),
+    sb.from("activity_feed").select("*").order("event_time",{ascending:false}).limit(40),
+    sb.from("financial_snapshot").select("*").order("snapshot_date",{ascending:false}).limit(1)
+  ]);
+  const bad = [debt,companies,revenue,activity,finance].find(r=>r.error);
+  if(bad) throw bad.error;
   return {
-    label, niche:label, deal,
-    companies:(NICHE_RAW[key]||[]).map(t=>{
-      const [name,suburb,st,nd]=t;
-      const slug=slugify(name);
-      return {
-        company_name:name, suburb,
-        outreach_status:STATUS_MAP[st]||"not_contacted",
-        next_action_date:nd||null, deal_value_zar:deal,
-        email:"info@"+slug.replace(/-/g,"")+".co.za", email_status:"found",
-        site_url:"https://"+slug+".vercel.app",
-        protocol_name:"The "+name.split(" ")[0]+" Protocol",
-        first_line:name+" in "+suburb+" caught my eye while I was looking at "+label.toLowerCase()+" in Cape Town.",
-        outreach_channel:"email"
-      };
-    })
+    debt: debt.data||[], companies: companies.data||[], revenue: revenue.data||[],
+    activity: activity.data||[], finance: (finance.data && finance.data[0]) || null
   };
 }
-function getNiche(){ return NICHE_DATA[CURRENT_NICHE] || expandNiche("plumbers"); }
+
+/* ════════════════ NICHE DATA ════════════════ */
+const VALID_NICHES = ["all","pest control","plumbers","electricians","roofers","gardeners"];
+const NICHE_DISPLAY = {"all":"all niches","pest control":"pest control","plumbers":"plumbers","electricians":"electricians","roofers":"roofers","gardeners":"gardeners"};
+let CURRENT_NICHE = "all";
+let PIPELINE_MRR = 0;
+
+function slugify(name){ return String(name||"").toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,""); }
+
+// DB outreach_status -> dashboard funnel vocabulary
+// (Not Contacted -> Emailed -> Follow-up 1 -> Follow-up 2 -> Responded -> Client)
+const DB_STATUS_MAP = {
+  not_started:"not_contacted", researching:"not_contacted", demo_built:"not_contacted",
+  contacted:"cold_sent",
+  followed_up:"followup_1_sent",
+  proposal_sent:"followup_2_sent",
+  replied:"replied", call_booked:"replied",
+  won:"won", lost:"lost"
+};
+
+// Map a Supabase outreach_companies row into the shape every renderer expects.
+function mapCompany(r){
+  const status = DB_STATUS_MAP[r.outreach_status] || "not_contacted";
+  const proto  = (r.protocol_name && String(r.protocol_name).toUpperCase() !== "SAMPLE")
+    ? r.protocol_name : ("The " + String(r.company_name||"").split(" ")[0] + " Protocol");
+  return {
+    company_name: r.company_name, niche: r.niche, suburb: r.suburb || "Cape Town",
+    outreach_status: status, raw_status: r.outreach_status,
+    next_action_date: r.next_action_date || null,
+    deal_value_zar: +r.deal_value_zar || 5000,
+    email: (r.email && r.email !== "not_found") ? r.email : "not_found",
+    site_url: r.demo_site_url || r.website || "",
+    protocol_name: proto,
+    first_line: (r.company_name || "This business") + " in " + (r.suburb || "Cape Town") +
+      " caught my eye while I was looking at " + (r.niche || "local") + " businesses in Cape Town."
+  };
+}
+
+function allCompanies(){ return (STATE.companies||[]).map(mapCompany).filter(c=>c.outreach_status !== "lost"); }
+function companiesForNiche(){
+  const all = allCompanies();
+  return CURRENT_NICHE === "all" ? all : all.filter(c=>c.niche === CURRENT_NICHE);
+}
+function nicheDeal(){
+  const cos = companiesForNiche();
+  if(!cos.length) return 5000;
+  return Math.round(cos.reduce((s,c)=>s+(c.deal_value_zar||0),0)/cos.length);
+}
+function getNiche(){
+  return { label: NICHE_DISPLAY[CURRENT_NICHE] || CURRENT_NICHE, niche: CURRENT_NICHE, deal: nicheDeal(), companies: companiesForNiche() };
+}
 
 /* ════════════════ UTILITIES ════════════════ */
 const $  = s => document.querySelector(s);
@@ -1067,7 +1093,7 @@ const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)')
 
 function animateCount(el, target, formatter, duration=1400){
   if(!el) return;
-  if(reduceMotion()){ el.textContent = formatter(target); return; }
+  if(!ANIM_ON || reduceMotion()){ el.textContent = formatter(target); return; }
   const start = performance.now();
   const step = now => {
     const t = Math.min((now-start)/duration,1);
@@ -1318,7 +1344,7 @@ function unlock(){
 }
 $("#go").addEventListener("click", tryUnlock);
 $("#pc").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
-if(sessionStorage.getItem("mc_unlocked")==="1") unlock();
+// auto-unlock moved to the end of this script so all const/let are initialised first.
 
 /* ════════════════ DEBT FREEDOM CALC ════════════════ */
 function monthsToFreedom(clientMRR){
@@ -1374,16 +1400,17 @@ function renderPipeline(data){
   const responded=(byStage.replied||[]).length+(byStage.won||[]).length;
 
   const today=new Date().toISOString().slice(0,10);
-  const due=cos.filter(c=>c.next_action_date && c.next_action_date<=today && ["cold_sent","followup_1_sent"].includes(c.outreach_status));
+  const NEXT_MOVE={not_contacted:"send cold email",cold_sent:"send follow-up 1",followup_1_sent:"send follow-up 2",followup_2_sent:"call / WhatsApp",replied:"book a call"};
+  const due=cos.filter(c=>c.next_action_date && c.next_action_date<=today && c.outreach_status!=="won");
   let actionsHtml;
   if(due.length){
     actionsHtml=due.map(c=>{
-      const nxt=c.outreach_status==="cold_sent"?"follow-up 1":"follow-up 2";
-      return `<div class="action-item"><span class="pin" aria-hidden="true">▸</span><strong>${esc(c.company_name)}</strong> <span class="faint">— send ${nxt} (due ${c.next_action_date})</span></div>`;
+      const nxt=NEXT_MOVE[c.outreach_status]||"follow up";
+      return `<div class="action-item"><span class="pin" aria-hidden="true">▸</span><strong>${esc(c.company_name)}</strong> <span class="faint">— ${nxt} (due ${c.next_action_date})</span></div>`;
     }).join("");
   }else{
     const remaining=cos.filter(c=>c.outreach_status==="not_contacted").length;
-    actionsHtml=`<div class="action-none">Nothing overdue today. ${remaining} still to first-contact.</div>`;
+    actionsHtml=`<div class="action-none">Nothing due today. ${remaining} still to first-contact.</div>`;
   }
 
   $("#funnelContainer").innerHTML =
@@ -1395,37 +1422,56 @@ function renderPipeline(data){
 }
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-/* ════════════════ RECENT ACTIVITY ════════════════ */
-function renderActivity(data){
-  const cos=data.companies||[];
-  const acts=[];
-  cos.forEach(c=>{
-    const s=c.outreach_status, d=c.next_action_date;
-    if(s==="won") acts.push({d,icon:"🎉",cls:"grn",txt:c.company_name+" signed",sub:"+"+rand(c.deal_value_zar||0)+"/mo"});
-    else if(s==="replied") acts.push({d,icon:"💬",cls:"grn",txt:c.company_name+" replied",sub:"book a call · "+(c.suburb||"")});
-    else if(s==="followup_2_sent") acts.push({d,icon:"📨",cls:"amb",txt:"Follow-up 2 → "+c.company_name,sub:c.suburb||""});
-    else if(s==="followup_1_sent") acts.push({d,icon:"📨",cls:"amb",txt:"Follow-up 1 → "+c.company_name,sub:c.suburb||""});
-    else if(s==="cold_sent") acts.push({d,icon:"✉️",cls:"blue",txt:"Cold email → "+c.company_name,sub:c.suburb||""});
+/* ════════════════ RECENT ACTIVITY (from activity_feed + outreach) ════════════════ */
+function actionMeta(action){
+  const a=String(action||"").toLowerCase();
+  if(a.includes("won")||a.includes("signed")||a.includes("deal")) return {icon:"🎉",cls:"grn"};
+  if(a.includes("paid")||a.includes("payment")) return {icon:"💰",cls:"grn"};
+  if(a.includes("repl")||a.includes("call")) return {icon:"💬",cls:"grn"};
+  if(a.includes("follow")) return {icon:"📨",cls:"amb"};
+  if(a.includes("email")||a.includes("contact")||a.includes("cold")) return {icon:"✉️",cls:"blue"};
+  if(a.includes("demo")||a.includes("built")||a.includes("site")) return {icon:"🏗️",cls:"blue"};
+  if(a.includes("mrr")||a.includes("revenue")) return {icon:"📈",cls:"grn"};
+  if(a.includes("schema")||a.includes("init")) return {icon:"🗄️",cls:""};
+  return {icon:"•",cls:""};
+}
+function humanizeAction(s){ return String(s||"").replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase()); }
+
+function renderActivity(){
+  const items=[];
+  (STATE.activity||[]).forEach(a=>{
+    const m=actionMeta(a.action);
+    items.push({ when:a.event_time?new Date(a.event_time):null, icon:m.icon, cls:m.cls,
+      txt: humanizeAction(a.action)+(a.company?(" · "+a.company):""), sub: a.details||"" });
   });
-  acts.sort((a,b)=>String(b.d||"").localeCompare(String(a.d||"")));
+  allCompanies().forEach(c=>{
+    const d=c.next_action_date?new Date(c.next_action_date+"T00:00:00"):null, s=c.outreach_status;
+    if(s==="won") items.push({when:d,icon:"🎉",cls:"grn",txt:c.company_name+" signed",sub:"+"+rand(c.deal_value_zar||0)+"/mo"});
+    else if(s==="replied") items.push({when:d,icon:"💬",cls:"grn",txt:c.company_name+" responded",sub:"book a call · "+(c.suburb||"")});
+    else if(s==="followup_2_sent") items.push({when:d,icon:"📨",cls:"amb",txt:"Follow-up 2 → "+c.company_name,sub:c.suburb||""});
+    else if(s==="followup_1_sent") items.push({when:d,icon:"📨",cls:"amb",txt:"Follow-up 1 → "+c.company_name,sub:c.suburb||""});
+    else if(s==="cold_sent") items.push({when:d,icon:"✉️",cls:"blue",txt:"Emailed "+c.company_name,sub:c.suburb||""});
+  });
+  items.sort((a,b)=>(b.when?b.when.getTime():0)-(a.when?a.when.getTime():0));
   const feed=$("#activityFeed");
-  $("#activityCount").textContent=acts.length+" events";
-  if(!acts.length){ feed.innerHTML=`<div class="feed-empty">No outreach yet for this niche.</div>`; return; }
-  feed.innerHTML=acts.slice(0,7).map(a=>`
+  if(!feed) return;
+  $("#activityCount").textContent=items.length+" event"+(items.length===1?"":"s");
+  if(!items.length){ feed.innerHTML=`<div class="feed-empty">No activity logged yet.</div>`; return; }
+  feed.innerHTML=items.slice(0,8).map(a=>`
     <div class="feed-item">
       <div class="feed-ic ${a.cls}">${a.icon}</div>
       <div class="feed-body"><div class="feed-txt">${esc(a.txt)}</div><div class="feed-sub">${esc(a.sub)}</div></div>
-      <div class="feed-time">${a.d?relDate(a.d):"—"}</div>
+      <div class="feed-time">${a.when?relTime(a.when):"—"}</div>
     </div>`).join("");
 }
-function relDate(iso){
-  const then=new Date(iso+"T00:00:00"); const now=new Date();
-  const diff=Math.round((then-now)/86400000);
-  if(diff===0) return "today";
-  if(diff===1) return "tmrw";
-  if(diff===-1) return "1d ago";
-  if(diff<0) return Math.abs(diff)+"d ago";
-  return "in "+diff+"d";
+function relTime(date){
+  const diff=date-new Date(), AD=Math.abs(diff), H=3600000, D=86400000;
+  if(AD<60000) return "now";
+  if(AD<H){ const m=Math.round(diff/60000); return m<0?Math.abs(m)+"m ago":"in "+m+"m"; }
+  if(AD<D){ const h=Math.round(diff/H); return h<0?Math.abs(h)+"h ago":"in "+h+"h"; }
+  const days=Math.round(diff/D);
+  if(days===1) return "tmrw"; if(days===-1) return "1d ago";
+  return days<0?Math.abs(days)+"d ago":"in "+days+"d";
 }
 
 /* ════════════════ RENDER: DEBT ════════════════ */
@@ -1439,9 +1485,12 @@ function renderDebt(){
   animateCount($("#stripDebt"), TOTAL_DEBT, rand);
   animateCount($("#stripAttack"), BASE_TO_DEBT, rand);
   animateCount($("#stripRunway"), RUNWAY_MONTHS, v=>Math.round(v*10)/10+" mo", 1000);
+  const subEl=$("#stripDebtSub"); if(subEl) subEl.textContent=DEBT_ACCOUNTS.length+" accounts";
 
-  const max=Math.max(...DEBT_ACCOUNTS.map(a=>a.balance));
-  const sorted=[...DEBT_ACCOUNTS].sort((a,b)=>b.apr-a.apr);
+  if(!DEBT_ACCOUNTS.length){ $("#accounts").innerHTML='<div class="feed-empty">No debt accounts loaded.</div>'; return; }
+  const sorted=[...DEBT_ACCOUNTS].sort((a,b)=> (b.apr-a.apr)||(a.balance-b.balance));
+  const tl=document.querySelector("#debt .target-label"); if(tl) tl.textContent="→ next: "+sorted[0].name;
+  const max=Math.max(...sorted.map(a=>a.balance));
   $("#accounts").innerHTML=sorted.map((a,i)=>`
     <div class="account-item ${i===0?'is-target':''}" role="listitem">
       <div class="account-name"><strong>${esc(a.name)}</strong><span class="account-min-pay">min ${rand(a.minPay)}/mo</span></div>
@@ -1462,12 +1511,12 @@ $("#wiIn").addEventListener("input", renderWhatif);
 const RING_CIRC=2*Math.PI*90;
 function renderRevenue(){
   const mrr=+($("#mrr").value)||0;
-  localStorage.setItem("mc_mrr", mrr);
-  const pct=Math.max(0,Math.min(100, mrr/FREEDOM_MRR*100));
+  const pct=Math.max(0,Math.min(100, FREEDOM_MRR? mrr/FREEDOM_MRR*100 : 0));
   const ringFill=$("#ringFill");
   if(ringFill){ ringFill.style.strokeDasharray=RING_CIRC; ringFill.style.strokeDashoffset=RING_CIRC*(1-pct/100); }
   animateCount($("#ringValue"), pct, v=>Math.round(v)+"%", 900);
   $("#rNow").textContent=rand(mrr)+" now";
+  const fm=document.querySelector(".ring-markers span:last-child"); if(fm) fm.textContent=randk(FREEDOM_MRR);
   const vsB=mrr-BREAKEVEN;
   $("#rBreak").innerHTML=vsB>=0?`<span class="grn">+${rand(vsB)}</span>`:`<span class="red">${rand(vsB)}</span>`;
   $("#rFree").textContent=mrr>=FREEDOM_MRR?"reached ✓":rand(FREEDOM_MRR-mrr);
@@ -1475,7 +1524,33 @@ function renderRevenue(){
   renderWar();
   drawRevenueTimeline();
 }
-$("#mrr").addEventListener("input", renderRevenue);
+// Seed the MRR field from the latest month in revenue_log if the user hasn't set one on this device.
+function seedMrrFromDb(){
+  const local=localStorage.getItem("mc_mrr");
+  if(local!==null && local!=="") return;
+  const rev=STATE.revenue||[]; if(!rev.length) return;
+  const latest=rev[0].month;
+  const sum=rev.filter(r=>r.month===latest).reduce((s,r)=>s+(+r.mrr_amount||0),0);
+  $("#mrr").value = sum ? sum : "";
+}
+// Debounced write-through to the revenue_log table (current month, source 'agency').
+let _mrrTimer=null;
+function scheduleMrrSave(){ clearTimeout(_mrrTimer); _mrrTimer=setTimeout(saveMrrToDb, 900); }
+async function saveMrrToDb(){
+  if(!sb) return;
+  const mrr=+($("#mrr").value)||0;
+  const now=new Date();
+  const month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-01`;
+  try{
+    const {error}=await sb.from("revenue_log").upsert({month, mrr_amount:mrr, source:"agency"},{onConflict:"month,source"});
+    if(error) throw error;
+    const ex=(STATE.revenue||[]).find(r=>r.month===month && r.source==="agency");
+    if(ex) ex.mrr_amount=mrr; else { STATE.revenue=STATE.revenue||[]; STATE.revenue.unshift({month,mrr_amount:mrr,source:"agency"}); }
+    writeCache(STATE);
+    toast("MRR saved to cloud ✓");
+  }catch(e){ console.warn("MRR cloud sync failed", e); toast("Saved on device · cloud sync failed"); }
+}
+$("#mrr").addEventListener("input", ()=>{ localStorage.setItem("mc_mrr", $("#mrr").value); renderRevenue(); scheduleMrrSave(); });
 $("#rtClients").addEventListener("input", ()=>{ localStorage.setItem("mc_clients", $("#rtClients").value); drawRevenueTimeline(); });
 
 /* ════════════════ RENDER: THE WAR ════════════════ */
@@ -1511,9 +1586,8 @@ function renderNiche(key){
   localStorage.setItem("mc_niche", key);
   const data=getNiche();
   renderPipeline(data);
-  renderActivity(data);
   renderCRM(data);
-  $("#qaNiche").textContent=data.label.toLowerCase();
+  $("#qaNiche").textContent=data.label;
   $("#crmTabBtn").textContent=`CRM (${(data.companies||[]).length})`;
   // reset quick-action result on niche switch
   $("#qaResult").innerHTML="";
@@ -1523,7 +1597,7 @@ function renderNiche(key){
 function initNicheSelector(){
   const sel=$("#nicheSelect");
   const saved=localStorage.getItem("mc_niche");
-  if(saved && NICHE_LABEL[saved]) sel.value=saved;
+  if(saved && VALID_NICHES.includes(saved)){ CURRENT_NICHE=saved; sel.value=saved; }
   sel.addEventListener("change", ()=>renderNiche(sel.value));
 }
 
@@ -1553,7 +1627,7 @@ function initQuickActions(){
         <div class="qc-actions">
           <button class="qa-mini solid" data-copy="${encodeURIComponent(filled)}">📋 Copy email</button>
           ${mailto?`<a class="qa-mini" href="${mailto}">✉️ Open in mail</a>`:""}
-          <a class="qa-mini" href="${esc(c.site_url)}" target="_blank" rel="noopener">🌐 Their site ↗</a>
+          ${c.site_url?`<a class="qa-mini" href="${esc(c.site_url)}" target="_blank" rel="noopener">🌐 Their site ↗</a>`:""}
         </div>
       </div>`;
     }).join("")+`<div class="qa-note">Personalised from the cold-email template · review before sending.</div>`;
@@ -1573,12 +1647,13 @@ function initQuickActions(){
   });
 
   $("#qaSites").addEventListener("click", ()=>{
-    const cos=(getNiche().companies||[]).slice(0,8);
+    const cos=(getNiche().companies||[]).filter(c=>c.site_url).slice(0,10);
+    if(!cos.length){ $("#qaResult").innerHTML=`<div class="qa-note">No demo sites recorded yet for these leads. Add a <code>demo_site_url</code> in Supabase and refresh.</div>`; $("#qaResult").scrollIntoView({behavior:reduceMotion()?"auto":"smooth",block:"nearest"}); return; }
     $("#qaResult").innerHTML=cos.map(c=>`
       <a class="site-link" href="${esc(c.site_url)}" target="_blank" rel="noopener">
         <span class="sl-name">${esc(c.company_name)}</span>
         <span class="sl-url">${esc((c.site_url||"").replace(/^https?:\/\//,""))} ↗</span>
-      </a>`).join("")+`<div class="qa-note">Each lead has a live demo site built for them. Tap to open in a new tab.</div>`;
+      </a>`).join("")+`<div class="qa-note">Live demo sites built for each lead. Tap to open in a new tab.</div>`;
     $("#qaResult").scrollIntoView({behavior:reduceMotion()?"auto":"smooth",block:"nearest"});
   });
 }
@@ -1644,66 +1719,73 @@ function renderOutreachPack(text){
   $("#packContent").innerHTML=html||'<pre class="template-view">'+esc(text)+'</pre>';
 }
 
-/* ════════════════ PEST DATA MERGE ════════════════ */
-function buildPestData(crm, pipe){
-  const pipeMap={};
-  (pipe&&pipe.companies||[]).forEach(c=>{ pipeMap[c.company_name]=c; });
-  const base=(crm&&crm.companies)||[];
-  const companies=base.map(c=>{
-    const p=pipeMap[c.company_name];
-    return Object.assign({}, c, {
-      outreach_status: p?p.outreach_status:(c.outreach_status||"not_contacted"),
-      next_action_date: p?p.next_action_date:(c.next_action_date||null),
-      deal_value_zar: (p&&p.deal_value_zar)||c.deal_value_zar||5000
-    });
-  });
-  return {label:"Pest Control", niche:"Pest Control", deal:5000, companies, generated:(pipe&&pipe.generated)||(crm&&crm.meta&&crm.meta.updated)};
+/* ════════════════ DATA ORCHESTRATION ════════════════ */
+function applyData(){
+  hasRenderedOnce = true;
+  recompute();
+  seedMrrFromDb();
+  renderDebt();
+  renderRevenue();
+  renderWhatif();
+  renderNiche(CURRENT_NICHE);
+  renderActivity();
+  drawTrajectoryChart();
+  drawRevenueTimeline();
+  ANIM_ON = false;            // entrance count-up done; background refreshes update silently
+}
+
+function setStamp(kind){
+  const dot=$("#statusDot"), stamp=$("#liveStamp");
+  if(!stamp) return;
+  if(dot) dot.classList.remove("stale","err");
+  stamp.classList.remove("stale","err");
+  const t=new Date().toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"});
+  if(kind==="live"){ stamp.textContent="live · "+t; }
+  else if(kind==="cached"){ stamp.textContent="cached · "+t; }
+  else if(kind==="stale"){ stamp.textContent="offline · cached"; if(dot) dot.classList.add("stale"); stamp.classList.add("stale"); }
+  else { stamp.textContent="offline"; if(dot) dot.classList.add("err"); stamp.classList.add("err"); }
+}
+function showCacheFlag(on){ const f=$("#cacheFlag"); if(f) f.classList.toggle("show", !!on); }
+function setRefreshing(on){ const b=$("#refreshBtn"); if(b) b.classList.toggle("spin", !!on); }
+function initRefresh(){
+  const b=$("#refreshBtn");
+  if(b) b.addEventListener("click", ()=>{ if(!b.classList.contains("spin")){ toast("Refreshing…"); refreshData(); } });
+}
+
+async function refreshData(){
+  setRefreshing(true);
+  try{
+    const data=await fetchAll();
+    const before=JSON.stringify({debt:STATE.debt,companies:STATE.companies,revenue:STATE.revenue,activity:STATE.activity,finance:STATE.finance});
+    Object.assign(STATE, data);
+    writeCache(STATE);
+    if(before!==JSON.stringify(data) || !hasRenderedOnce) applyData();
+    setStamp("live"); showCacheFlag(false);
+  }catch(e){
+    console.warn("Live refresh failed", e);
+    if(hasData()){ setStamp("stale"); showCacheFlag(true); }
+    else { setStamp("err"); const fc=$("#funnelContainer"); if(fc) fc.innerHTML='<div class="feed-empty">Couldn’t reach the database. Check your connection, then tap refresh ⟳.</div>'; }
+  }finally{ setRefreshing(false); }
 }
 
 /* ════════════════ BOOT ════════════════ */
 function boot(){
   initScrollProgress();
-
-  // build embedded niches
-  ["plumbers","electricians","roofers","gardens"].forEach(k=>{ NICHE_DATA[k]=expandNiche(k); });
-  NICHE_DATA.pest=Object.assign({label:"Pest Control",niche:"Pest Control",deal:5000},FALLBACK_PIPELINE);
-
-  // restore saved state
-  $("#mrr").value=localStorage.getItem("mc_mrr")||"";
-  $("#rtClients").value=localStorage.getItem("mc_clients")||"2";
-  const savedNiche=localStorage.getItem("mc_niche");
-  if(savedNiche && NICHE_LABEL[savedNiche]) CURRENT_NICHE=savedNiche;
-
-  renderDebt();
-  renderRevenue();
-  renderWhatif();
-  setTimeout(drawTrajectoryChart, 60);
-  setTimeout(drawRevenueTimeline, 80);
-
   initTabs();
   initNicheSelector();
   initQuickActions();
-  $("#nicheSelect").value=CURRENT_NICHE;
-
-  // initial niche render (fallback pest) then upgrade with real data
-  renderNiche(CURRENT_NICHE);
+  initRefresh();
   loadOutreachPack();
 
-  // fetch real pest data (pipeline.json statuses + crm-export.json richness)
-  Promise.allSettled([
-    fetch("./crm-export.json",{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()),
-    fetch("./pipeline.json",{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject())
-  ]).then(([crmRes,pipeRes])=>{
-    const crm=crmRes.status==="fulfilled"?crmRes.value:null;
-    const pipe=pipeRes.status==="fulfilled"?pipeRes.value:null;
-    if(crm||pipe){
-      NICHE_DATA.pest=buildPestData(crm||{companies:[]}, pipe);
-      if(pipe&&pipe.generated) $("#liveStamp").textContent="live · gen "+pipe.generated;
-      if(CURRENT_NICHE==="pest") renderNiche("pest");
-    }
-  });
+  // restore device-local state
+  const savedMrr=localStorage.getItem("mc_mrr");
+  if(savedMrr!==null && savedMrr!=="") $("#mrr").value=savedMrr;
+  $("#rtClients").value=localStorage.getItem("mc_clients")||"2";
+  const savedNiche=localStorage.getItem("mc_niche");
+  if(savedNiche && VALID_NICHES.includes(savedNiche)) CURRENT_NICHE=savedNiche;
+  $("#nicheSelect").value=CURRENT_NICHE;
 
-  // scroll reveal
+  // staggered panel reveal on scroll
   if(window.IntersectionObserver && !reduceMotion()){
     const obs=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ e.target.style.opacity="1"; e.target.style.transform="translateY(0)"; obs.unobserve(e.target);} }); },{threshold:.08});
     $$(".panel").forEach(p=>{
@@ -1714,10 +1796,16 @@ function boot(){
     });
   }
 
-  // live stamp
-  const now=new Date();
-  $("#liveStamp").textContent="live · "+now.toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"});
+  // 1) paint cached data instantly, 2) fetch fresh from Supabase in the background
+  const cached=readCache();
+  if(cached){ Object.assign(STATE, cached); applyData(); setStamp("cached"); }
+  else { setStamp("cached"); $("#liveStamp").textContent="loading…"; }
+  refreshData();
 }
+
+// Auto-unlock if this browser session already authenticated (runs last, after all
+// const/let above are initialised — avoids any temporal-dead-zone on reload).
+if(sessionStorage.getItem("mc_unlocked")==="1") unlock();
 </script>
 </body>
 </html>
