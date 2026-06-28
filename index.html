@@ -808,6 +808,47 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
   .cr-cell.cr-status-cell{grid-column:1 / -1}
 }
 
+/* ════════════════ PAYMENTS (⑦ · Payments section) ════════════════ */
+.pm-block{position:relative;z-index:1;margin-top:var(--s7);border-top:1px solid var(--border);padding-top:var(--s6)}
+.pm-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:var(--s2) var(--s4);margin-bottom:var(--s5)}
+.pm-title{font-size:14px;font-weight:800;color:var(--txt);letter-spacing:.01em}
+.pm-title .pm-ic{margin-right:6px}
+.pm-sub{font-size:11px;color:var(--txt-4)}
+.pm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3);margin-bottom:var(--s6)}
+.pm-stat{text-align:center;background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s4) var(--s3);transition:background var(--t-fast),border-color var(--t-fast),transform var(--t-fast)}
+.pm-stat:hover{background:var(--glass-2);border-color:var(--border-2);transform:translateY(-2px)}
+@media(hover:none){.pm-stat:hover{transform:none}}
+.pm-stat.is-rec{border-color:var(--border-glow);background:var(--green-subtle)}
+.pm-stat-n{font-family:var(--mono);font-size:17px;font-weight:800}
+.pm-stat-n.grn{color:var(--green-bright)}.pm-stat-n.amb{color:var(--amber)}
+.pm-stat-l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-4);font-weight:700;margin-top:var(--s2)}
+.pm-list-label{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--txt-4);font-weight:700;margin-bottom:var(--s3)}
+.pm-list{display:flex;flex-direction:column;gap:var(--s2)}
+.pm-row{display:grid;grid-template-columns:1.6fr .9fr 1fr auto;gap:var(--s3);align-items:center;padding:var(--s4) var(--s3);background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);transition:background var(--t-fast),border-color var(--t-fast)}
+.pm-row:hover{background:var(--glass-2);border-color:var(--border-2)}
+.pm-co{min-width:0}
+.pm-co strong{display:block;font-size:13px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm-co .pm-meta{font-family:var(--mono);font-size:10px;color:var(--txt-4);margin-top:2px}
+.pm-amt{font-family:var(--mono);font-size:13.5px;font-weight:800;color:var(--txt);text-align:right}
+.pm-pill{justify-self:start;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:capitalize;padding:4px 10px;border-radius:var(--r-full);border:1px solid transparent;white-space:nowrap}
+.pm-pill.received{background:var(--green-subtle);color:var(--green-bright);border-color:var(--border-glow)}
+.pm-pill.pending{background:var(--amber-subtle);color:var(--amber);border-color:rgba(251,191,36,.3)}
+.pm-pill.failed{background:var(--red-subtle);color:var(--red);border-color:var(--red-d)}
+.pm-paid-btn{font-family:var(--sans);font-size:11px;font-weight:800;color:#05140a;background:linear-gradient(135deg,var(--green),var(--green-d));border:none;padding:7px 13px;border-radius:var(--r-full);cursor:pointer;white-space:nowrap;transition:filter var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast);-webkit-tap-highlight-color:transparent}
+.pm-paid-btn:hover{filter:brightness(1.08);box-shadow:0 2px 10px var(--green-glow);transform:translateY(-1px)}
+.pm-paid-btn:active{transform:scale(.95)}
+.pm-paid-btn:disabled{opacity:.55;cursor:default;filter:none;box-shadow:none;transform:none}
+.pm-done{font-size:11px;color:var(--txt-4);font-family:var(--mono);justify-self:end;padding-right:6px}
+.pm-empty{text-align:center;padding:var(--s8) var(--s4);font-size:12.5px;color:var(--txt-3);font-family:var(--mono)}
+@media(max-width:720px){
+  .pm-stats{gap:var(--s2)}
+  .pm-stat-n{font-size:15px}
+  .pm-row{grid-template-columns:1fr auto;gap:var(--s2) var(--s3)}
+  .pm-amt{text-align:left}
+  .pm-pill{justify-self:start}
+  .pm-paid-btn,.pm-done{grid-column:2;justify-self:end}
+}
+
 /* ════════════════ AVATAR (⑦ · Prompt 7) ════════════════ */
 .avatar-btn{
   position:relative;width:34px;height:34px;flex:0 0 auto;
@@ -1689,6 +1730,23 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
           <div class="ea-loading"><span class="spinner" aria-hidden="true"></span> Loading clients…</div>
         </div>
 
+        <!-- ═══ PAYMENTS ═══ -->
+        <div class="pm-block" id="pmBlock" aria-label="Payments">
+          <div class="pm-head">
+            <span class="pm-title"><span class="pm-ic" aria-hidden="true">💳</span> Payments</span>
+            <span class="pm-sub">Invoices &amp; income · live from Supabase <code>payments</code></span>
+          </div>
+          <div class="pm-stats" id="pmStats" aria-label="Payments summary">
+            <div class="pm-stat is-rec"><div class="pm-stat-n grn" id="pmReceived">R0</div><div class="pm-stat-l">✅ Received this month</div></div>
+            <div class="pm-stat"><div class="pm-stat-n amb" id="pmPending">R0</div><div class="pm-stat-l">⏳ Pending</div></div>
+            <div class="pm-stat"><div class="pm-stat-n" id="pmCount">0</div><div class="pm-stat-l">🧾 Total payments</div></div>
+          </div>
+          <div class="pm-list-label">Last 5 payments</div>
+          <div class="pm-list" id="pmList" aria-live="polite">
+            <div class="ea-loading"><span class="spinner" aria-hidden="true"></span> Loading payments…</div>
+          </div>
+        </div>
+
         <div class="cr-note">
           Paid clients feed the <a href="#revenueSection" style="color:var(--green);text-decoration:none">Revenue Tracker</a> — its MRR reflects the sum of <b>monthly fees where status = paid</b>. Adding a client or marking one paid updates it automatically. Data lives in Supabase <code>clients</code>.
         </div>
@@ -1870,7 +1928,7 @@ try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
 catch(e){ console.warn("Supabase client failed to initialise", e); }
 
 /* ──────────── LIVE STATE — everything comes from the database ──────────── */
-const STATE = { debt:[], companies:[], revenue:[], activity:[], finance:null, clients:[] };
+const STATE = { debt:[], companies:[], revenue:[], activity:[], finance:null, clients:[], payments:[] };
 let ANIM_ON = true;          // count-up animation only on first paint
 let hasRenderedOnce = false;
 
@@ -1898,29 +1956,32 @@ function recompute(){
 /* ──────────── SESSION CACHE (instant paint, fewer DB reads) ──────────── */
 const CACHE_KEY = "mc_cache_v3";
 function readCache(){ try { return JSON.parse(sessionStorage.getItem(CACHE_KEY)); } catch(_){ return null; } }
-function writeCache(d){ try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({debt:d.debt,companies:d.companies,revenue:d.revenue,activity:d.activity,finance:d.finance,clients:d.clients})); } catch(_){ } }
+function writeCache(d){ try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({debt:d.debt,companies:d.companies,revenue:d.revenue,activity:d.activity,finance:d.finance,clients:d.clients,payments:d.payments})); } catch(_){ } }
 function hasData(){ return !!(STATE.finance || (STATE.debt && STATE.debt.length)); }
 
 /* ──────────── FETCH ALL FIVE TABLES ──────────── */
 async function fetchAll(){
   if(!sb) throw new Error("Supabase client unavailable");
-  const [debt, companies, revenue, activity, finance, clients] = await Promise.all([
+  const [debt, companies, revenue, activity, finance, clients, payments] = await Promise.all([
     sb.from("debt_accounts").select("*"),
     sb.from("outreach_companies").select("*"),
     sb.from("revenue_log").select("*").order("month",{ascending:false}),
     sb.from("activity_feed").select("*").order("event_time",{ascending:false}).limit(40),
     sb.from("financial_snapshot").select("*").order("snapshot_date",{ascending:false}).limit(1),
-    sb.from("clients").select("*").order("created_at",{ascending:false})
+    sb.from("clients").select("*").order("created_at",{ascending:false}),
+    sb.from("payments").select("*").order("payment_date",{ascending:false,nullsFirst:false})
   ]);
-  // clients is intentionally excluded from this check — a missing table (before the
-  // SQL is run) must NOT take down the rest of the dashboard.
+  // clients + payments are intentionally excluded from this check — a missing table
+  // (before its SQL is run) must NOT take down the rest of the dashboard.
   const bad = [debt,companies,revenue,activity,finance].find(r=>r.error);
   if(bad) throw bad.error;
   if(clients && clients.error) console.warn("clients table not reachable yet", clients.error);
+  if(payments && payments.error) console.warn("payments table not reachable yet", payments.error);
   return {
     debt: debt.data||[], companies: companies.data||[], revenue: revenue.data||[],
     activity: activity.data||[], finance: (finance.data && finance.data[0]) || null,
-    clients: (clients && !clients.error && clients.data) ? clients.data : []
+    clients: (clients && !clients.error && clients.data) ? clients.data : [],
+    payments: (payments && !payments.error && payments.data) ? payments.data : []
   };
 }
 
@@ -3048,7 +3109,85 @@ function renderClientTable(){
   }).join("");
   host.innerHTML=head+rows;
 }
-function renderClients(){ renderClientSummary(); renderClientTable(); }
+function renderClients(){ renderClientSummary(); renderClientTable(); renderPayments(); }
+
+// ── PAYMENTS (⑦ · Payments section) ──
+// Reads STATE.payments (Supabase `payments`). "Received this month" sums
+// status='received' rows dated in the current calendar month; "Pending" sums
+// status='pending'. The last 5 payments list shows a Mark-as-Paid button on any
+// pending row — clicking it flips the payment to 'received' AND its parent
+// client to payment_status='paid' (which re-mirrors into the Revenue Tracker MRR).
+function pmClientName(cid){
+  const c=(STATE.clients||[]).find(x=>String(x.id)===String(cid));
+  return c ? c.company_name : "Unlinked payment";
+}
+function pmInMonth(d, now){
+  if(!d) return false;
+  const dt=new Date(String(d)+"T00:00:00");
+  if(isNaN(dt.getTime())) return false;
+  return dt.getFullYear()===now.getFullYear() && dt.getMonth()===now.getMonth();
+}
+function renderPayments(){
+  const ps=STATE.payments||[];
+  const now=new Date();
+  const recMonth=ps.filter(p=>p.status==="received" && pmInMonth(p.payment_date, now))
+    .reduce((s,p)=>s+(+p.amount_zar||0),0);
+  const pending=ps.filter(p=>p.status==="pending").reduce((s,p)=>s+(+p.amount_zar||0),0);
+  const set=(id,v)=>{ const el=$(id); if(el) el.textContent=v; };
+  set("#pmReceived", rand(recMonth));
+  set("#pmPending", rand(pending));
+  set("#pmCount", String(ps.length));
+
+  const host=$("#pmList"); if(!host) return;
+  if(!ps.length){
+    host.innerHTML=`<div class="pm-empty">No payments yet. Invoices logged in Supabase <code>payments</code> appear here.</div>`;
+    return;
+  }
+  const sorted=ps.slice().sort((a,b)=>{
+    const da=String(a.payment_date||a.created_at||""), db=String(b.payment_date||b.created_at||"");
+    return db<da ? -1 : db>da ? 1 : 0;
+  }).slice(0,5);
+  host.innerHTML=sorted.map(p=>{
+    const st=p.status||"pending";
+    const meta=[crFmtDate(p.payment_date),
+                p.payment_method?crCap(p.payment_method):null,
+                p.invoice_number?("#"+p.invoice_number):null].filter(Boolean).join(" · ");
+    const action = st==="pending"
+      ? `<button class="pm-paid-btn" data-pay="${esc(p.id)}" type="button">✓ Mark as Paid</button>`
+      : `<span class="pm-done">${st==="received"?"paid":"—"}</span>`;
+    return `<div class="pm-row">
+      <div class="pm-co"><strong>${esc(pmClientName(p.client_id))}</strong><span class="pm-meta">${esc(meta||"—")}</span></div>
+      <div class="pm-amt">${rand(+p.amount_zar||0)}</div>
+      <span class="pm-pill ${esc(st)}">${crCap(st)}</span>
+      ${action}
+    </div>`;
+  }).join("");
+}
+async function pmMarkPaid(id){
+  const p=(STATE.payments||[]).find(x=>String(x.id)===String(id));
+  if(!p || p.status==="received") return;
+  const prevP=p.status;
+  p.status="received";                                   // optimistic
+  const cl=(STATE.clients||[]).find(x=>String(x.id)===String(p.client_id));
+  const prevC = cl ? cl.payment_status : null;
+  if(cl) cl.payment_status="paid";                       // spec: payment received → client paid
+  renderClients(); writeCache(STATE); syncMrrFromClients(true);
+  if(!sb){ toast("Saved on device · no cloud connection"); return; }
+  try{
+    const { error:pe } = await sb.from("payments").update({ status:"received" }).eq("id", id);
+    if(pe) throw pe;
+    if(cl){
+      const { error:ce } = await sb.from("clients").update({ payment_status:"paid" }).eq("id", cl.id);
+      if(ce) throw ce;
+    }
+    toast(`Payment received${cl?` · ${cl.company_name} → paid`:""} ✓`);
+  }catch(e){
+    console.warn("mark paid failed", e);
+    p.status=prevP; if(cl && prevC!=null) cl.payment_status=prevC;   // rollback
+    renderClients(); writeCache(STATE); syncMrrFromClients(true);
+    toast("Couldn't update payment · check connection");
+  }
+}
 
 // ── LINK TO REVENUE TRACKER (③) ──
 // Mirror the sum of PAID clients' monthly fees into the MRR input. force=true (an
@@ -3149,6 +3288,13 @@ function initClientRevenue(){
   $("#crTable").addEventListener("change", (e)=>{
     const sel=e.target.closest(".cr-status-sel");
     if(sel) crUpdateStatus(sel.dataset.id, sel.value);
+  });
+
+  // Delegated: "Mark as Paid" on a pending payment → received + client paid.
+  const pmList=$("#pmList");
+  if(pmList) pmList.addEventListener("click", (e)=>{
+    const btn=e.target.closest(".pm-paid-btn");
+    if(btn){ btn.disabled=true; pmMarkPaid(btn.dataset.pay); }
   });
 }
 
