@@ -714,6 +714,38 @@ button:focus-visible,input:focus-visible,details summary:focus-visible{outline-o
   #warDays{text-shadow:none}
   #mesh{animation:none}
 }
+
+/* ════════════════ TEMPLATES & CRM PANEL ════════════════ */
+.tab-bar{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab-btn{background:var(--surface-alt);border:1px solid var(--border);color:var(--txt-muted);font-size:12px;font-weight:500;padding:8px 14px;border-radius:8px;cursor:pointer;transition:all var(--transition-fast);font-family:var(--sans)}
+.tab-btn:hover{background:var(--surface-hover);color:var(--txt)}
+.tab-btn.active{background:var(--green);color:#05140a;border-color:var(--green);font-weight:600}
+.tab-content{display:none}
+.tab-content.show{display:block;animation:fadeUp .3s ease}
+.template-view{background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:16px;font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--txt-secondary);white-space:pre-wrap;word-wrap:break-word;overflow-x:auto}
+.crm-table{font-size:13px}
+.crm-row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center}
+.crm-row:last-child{border-bottom:none}
+.crm-name{font-weight:600;color:var(--txt);font-size:13px}
+.crm-name a{color:var(--green);text-decoration:none;font-size:11px;margin-left:6px}
+.crm-name a:hover{text-decoration:underline}
+.crm-sub{font-size:11px;color:var(--faint);margin-top:2px}
+.crm-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.crm-badge.nc{background:rgba(255,255,255,.04);color:var(--faint)}
+.crm-badge.cs{background:rgba(56,189,248,.1);color:var(--blue)}
+.crm-badge.f1{background:rgba(245,158,11,.1);color:var(--amber)}
+.crm-badge.f2{background:rgba(245,158,11,.1);color:var(--amber)}
+.crm-badge.re{background:rgba(34,197,94,.1);color:var(--green)}
+.crm-badge.wo{background:rgba(34,197,94,.2);color:var(--green)}
+.crm-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+@media(max-width:520px){.crm-summary{grid-template-columns:repeat(2,1fr)}}
+.crm-stat{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.crm-stat .n{font-family:var(--mono);font-size:20px;font-weight:700}
+.crm-stat .l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+.pack-section{background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.pack-section h4{font-size:13px;font-weight:600;margin-bottom:8px}
+.pack-section .pack-meta{font-size:11px;color:var(--faint);margin-bottom:8px}
+.pack-section .pack-body{font-size:12px;color:var(--muted);line-height:1.6;white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -887,6 +919,101 @@ button:focus-visible,input:focus-visible,details summary:focus-visible{outline-o
     </div>
     <div id="funnelContainer">
       <div class="pipeline-loader"><span class="spinner" aria-hidden="true"></span> Loading pipeline...</div>
+    </div>
+  </div>
+
+  <!-- PANEL: TEMPLATES & CRM -->
+  <div class="panel enter" id="templates" style="margin-top:var(--space-5)" role="region" aria-label="Email templates and CRM data">
+    <div class="panel-head">
+      <span class="panel-label">④ Templates &amp; CRM</span>
+      <span class="panel-tag">view on phone</span>
+    </div>
+
+    <!-- Tab buttons -->
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" data-tab="cold" role="tab" aria-selected="true">Cold Email</button>
+      <button class="tab-btn" data-tab="fu1" role="tab">Follow-up 1</button>
+      <button class="tab-btn" data-tab="fu2" role="tab">Follow-up 2</button>
+      <button class="tab-btn" data-tab="crm" role="tab">CRM (20)</button>
+      <button class="tab-btn" data-tab="pack" role="tab">Outreach Pack</button>
+    </div>
+
+    <!-- Cold email template -->
+    <div class="tab-content show" id="tab-cold" role="tabpanel">
+      <pre class="template-view">Subject: I built you a website, {{COMPANY_NAME}} (it's free)
+
+{{FIRST_LINE}}
+
+So I did something a bit mad.
+
+I'm a web designer here in Cape Town. I build sites for local trades... and I went ahead and built one for you.
+
+It's already live. Have a look on your phone:
+
+{{SITE_URL}}
+
+It's got your name on it, a quick quote tool, and a 4-step system I wrote up for you called {{PROTOCOL_NAME}}.
+
+No catch. I didn't ask first, I know... showing beats explaining.
+
+The phone number on it is a placeholder for now.
+
+If you want it, it's yours. Just reply with your real phone number and I'll make it live.
+
+If not, no stress at all. Hope it gives you an idea or two.
+
+Cheers,
+Aaqiel
+
+If you'd rather I not contact you again, just reply 'stop'.</pre>
+    </div>
+
+    <!-- Follow-up 1 -->
+    <div class="tab-content" id="tab-fu1" role="tabpanel">
+      <pre class="template-view">Subject: Re: I built you a website, {{COMPANY_NAME}} (it's free)
+
+Hey... just floating this back up.
+
+Did you get a chance to look at the site I built for {{COMPANY_NAME}}?
+
+{{SITE_URL}}
+
+The quote tool is the bit I'd love you to try - tap through it on your phone, it takes 10 seconds.
+
+No rush at all...
+
+Cheers,
+Aaqiel
+
+If you'd rather I not contact you again, just reply 'stop'.</pre>
+    </div>
+
+    <!-- Follow-up 2 -->
+    <div class="tab-content" id="tab-fu2" role="tabpanel">
+      <pre class="template-view">Subject: Re: I built you a website, {{COMPANY_NAME}} (it's free)
+
+Hey... last thing from me.
+
+I'm going to take the site down in a few days - it's got {{COMPANY_NAME}}'s name on it, and I don't want to leave it up if it's not being used.
+
+If you want it, it's yours. Just reply with your real phone number and I'll swap everything over and make it live.
+
+If not, no stress at all. I'll take it down and that's that.
+
+Cheers,
+Aaqiel
+
+If you'd rather I not contact you again, just reply 'stop'.</pre>
+    </div>
+
+    <!-- CRM table -->
+    <div class="tab-content" id="tab-crm" role="tabpanel">
+      <div class="crm-table" id="crmTable">Loading CRM...</div>
+    </div>
+
+    <!-- Outreach pack -->
+    <div class="tab-content" id="tab-pack" role="tabpanel">
+      <div id="packContent">Loading outreach pack...</div>
     </div>
   </div>
 
@@ -1304,6 +1431,13 @@ function boot(){
     })
     .catch(()=>renderPipeline(FALLBACK_PIPELINE));
 
+  // Load CRM data
+  loadCRM();
+  // Load outreach pack
+  loadOutreachPack();
+  // Init tabs
+  initTabs();
+
   // Scroll reveal for panels
   if(window.IntersectionObserver && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     const obs = new IntersectionObserver((entries)=>{
@@ -1327,6 +1461,104 @@ function boot(){
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-ZA', {hour:'2-digit',minute:'2-digit'});
   document.getElementById('liveStamp').textContent = `live · ${timeStr}`;
+}
+/* ════════════════ TABS ════════════════ */
+function initTabs(){
+  $$('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      $$('.tab-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false')});
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      $$('.tab-content').forEach(c=>c.classList.remove('show'));
+      $('#tab-'+btn.dataset.tab).classList.add('show');
+    });
+  });
+}
+
+/* ════════════════ CRM LOADER ════════════════ */
+function loadCRM(){
+  fetch("./crm-export.json",{cache:"no-store"})
+    .then(r=>r.ok?r.json():Promise.reject())
+    .then(renderCRM)
+    .catch(()=>{
+      // Fallback: render from FALLBACK_PIPELINE
+      const cos = FALLBACK_PIPELINE.companies || [];
+      renderCRM({companies: cos.map(c=>({company_name:c.company_name, outreach_status:c.outreach_status, suburb:'Cape Town', email:'not_found', site_url:''}))});
+    });
+}
+
+function renderCRM(data){
+  const cos = data.companies || [];
+  const stageMap = {not_contacted:{label:'Not Contacted',cls:'nc'}, cold_sent:{label:'Emailed',cls:'cs'}, followup_1_sent:{label:'Follow-up 1',cls:'f1'}, followup_2_sent:{label:'Follow-up 2',cls:'f2'}, replied:{label:'Responded',cls:'re'}, won:{label:'Client',cls:'wo'}};
+
+  // Summary stats
+  const stats = {};
+  cos.forEach(c=>{const s=c.outreach_status||'not_contacted';stats[s]=(stats[s]||0)+1});
+  const emailable = cos.filter(c=>c.email && c.email!=='not_found').length;
+
+  let html = '<div class="crm-summary">';
+  html += `<div class="crm-stat"><div class="n">${cos.length}</div><div class="l">Total</div></div>`;
+  html += `<div class="crm-stat"><div class="n">${emailable}</div><div class="l">Emailable</div></div>`;
+  html += `<div class="crm-stat"><div class="n">${stats.not_contacted||0}</div><div class="l">Not Contacted</div></div>`;
+  html += `<div class="crm-stat"><div class="n">${(stats.cold_sent||0)+(stats.followup_1_sent||0)+(stats.followup_2_sent||0)}</div><div class="l">In Progress</div></div>`;
+  html += '</div>';
+
+  // Company rows
+  cos.forEach(c=>{
+    const st = stageMap[c.outreach_status||'not_contacted'] || {label:c.outreach_status,cls:'nc'};
+    const email = c.email && c.email !== 'not_found' ? c.email : '📱 WhatsApp';
+    const site = c.site_url ? ` <a href="${c.site_url}" target="_blank" rel="noopener">view site →</a>` : '';
+    html += `<div class="crm-row">
+      <div>
+        <div class="crm-name">${c.company_name}${site}</div>
+        <div class="crm-sub">${c.suburb||'Cape Town'} · ${email}</div>
+      </div>
+      <span class="crm-badge ${st.cls}">${st.label}</span>
+    </div>`;
+  });
+
+  $('#crmTable').innerHTML = html;
+}
+
+/* ════════════════ OUTREACH PACK LOADER ════════════════ */
+function loadOutreachPack(){
+  fetch("./outreach-pack.md",{cache:"no-store"})
+    .then(r=>r.ok?r.text():Promise.reject())
+    .then(renderOutreachPack)
+    .catch(()=>{ $('#packContent').innerHTML = '<p style="color:var(--faint);font-size:13px">Outreach pack not available. Check outreach/outreach-pack.md on your computer.</p>'; });
+}
+
+function renderOutreachPack(text){
+  // Parse the markdown into sections
+  const sections = text.split(/^## /m).filter(s=>s.trim());
+  let html = '';
+
+  sections.forEach(sec=>{
+    const lines = sec.trim().split('\n');
+    const title = lines[0].trim();
+    const body = lines.slice(1).join('\n').trim();
+
+    // Extract company name, email, site, subject
+    const nameMatch = body.match(/^([^·\n]+)/);
+    const emailMatch = body.match(/To:\s*(\S+@\S+)/);
+    const siteMatch = body.match(/Site:\s*(\S+)/);
+    const subjectMatch = body.match(/Subject:\s*(.+)/);
+
+    if(title && !title.startsWith('Cold outreach') && !title.startsWith('_Voice')){
+      html += `<div class="pack-section">
+        <h4>${title.replace(/\*/g,'')}</h4>
+        <div class="pack-meta">`;
+      if(emailMatch) html += `✉️ ${emailMatch[1]} · `;
+      if(siteMatch) html += `🌐 <a href="${siteMatch[1]}" target="_blank" style="color:var(--green);text-decoration:none">${siteMatch[1]}</a>`;
+      if(subjectMatch) html += `<br>📋 ${subjectMatch[1]}`;
+      html += `</div>
+        <div class="pack-body">${body.replace(/---/g,'').trim().substring(0, 500)}...</div>
+      </div>`;
+    }
+  });
+
+  if(!html) html = '<pre class="template-view">'+text+'</pre>';
+  $('#packContent').innerHTML = html || '<p style="color:var(--faint)">No outreach pack found.</p>';
 }
 </script>
 </body>
