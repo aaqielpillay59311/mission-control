@@ -3,9 +3,8 @@
   ════════════════════════════════════════════════════════════
   MISSION CONTROL · BUILD QUEUE (remaining prompts) — for Claude Code
   ════════════════════════════════════════════════════════════
-  DONE:  1 Scaffold/dashboard · 2 Supabase wiring · 3 Import 100 outreach companies · 4 Website Status panel
+  DONE:  1 Scaffold/dashboard · 2 Supabase wiring · 3 Import 100 outreach companies · 4 Website Status panel · 5 Email/Cron/Telegram monitoring (Resend via /api proxy)
   TODO:
-    - Prompt 5:  Add Email/Cron monitoring (Resend API)
     - Prompt 6:  Add Client Revenue tracking
     - Prompt 7:  Add storage bucket for avatar
     - Prompt 8:  Add lead management page
@@ -636,6 +635,88 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .ss-note .ss-leg i.up{background:var(--green)}
 .ss-note .ss-leg i.down{background:var(--red)}
 .ss-note .ss-leg i.pending{background:var(--txt-4)}
+
+/* ════════════════ EMAIL & AUTOMATION (⑥) ════════════════ */
+.ea-head-right{display:flex;align-items:center;gap:var(--s3)}
+.ea-refresh{display:inline-flex;align-items:center;gap:7px;background:var(--glass-2);border:1px solid var(--border);color:var(--txt-2);font-family:var(--sans);font-weight:700;font-size:11.5px;padding:8px 14px;border-radius:var(--r-full);cursor:pointer;min-height:38px;transition:background var(--t-fast),border-color var(--t-fast),color var(--t-fast);-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.ea-refresh:hover{background:var(--green-subtle);border-color:var(--border-glow);color:var(--txt)}
+.ea-refresh:disabled{opacity:.6;cursor:wait}
+.ea-refresh svg{width:13px;height:13px;display:block}
+.ea-refresh.spin svg{animation:spin .8s linear infinite}
+@media(max-width:520px){.ea-refresh span.lbl{display:none}.ea-refresh{padding:8px 11px}}
+
+.ea-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--s5);position:relative;z-index:1}
+@media(max-width:880px){.ea-grid{grid-template-columns:1fr;gap:var(--s6)}}
+.ea-col{display:flex;flex-direction:column;min-width:0}
+.ea-col-head{display:flex;align-items:center;gap:var(--s2);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-2);font-weight:700;margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--border)}
+.ea-col-head .ea-ic{font-size:14px}
+.ea-col-head .ea-col-sub{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--txt-4);letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
+
+/* email stats */
+.ea-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);margin-bottom:var(--s4)}
+.ea-stat{background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3) var(--s2);text-align:center}
+.ea-stat .ea-stat-n{font-family:var(--mono);font-size:clamp(18px,3vw,21px);font-weight:800;color:var(--txt);line-height:1}
+.ea-stat .ea-stat-l{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-4);margin-top:5px;font-weight:700}
+.ea-rates{display:flex;flex-direction:column;gap:var(--s3);margin-bottom:var(--s5)}
+.ea-rate{display:flex;align-items:center;gap:var(--s3)}
+.ea-rate .ea-rate-l{font-size:10.5px;color:var(--txt-3);font-weight:600;width:48px;flex:0 0 auto}
+.ea-rate .ea-rate-track{flex:1;height:7px;border-radius:var(--r-full);background:rgba(255,255,255,.05);overflow:hidden}
+.ea-rate .ea-rate-track i{display:block;height:100%;border-radius:var(--r-full);transition:width .7s var(--t-slow)}
+.ea-rate .ea-rate-v{font-family:var(--mono);font-size:11px;font-weight:700;width:42px;text-align:right;flex:0 0 auto;color:var(--txt-2)}
+
+/* shared list label */
+.ea-sub-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-4);font-weight:700;margin-bottom:var(--s2)}
+.ea-list{display:flex;flex-direction:column}
+
+/* email rows */
+.ea-email{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;border-top:1px solid var(--border)}
+.ea-email:first-child{border-top:none}
+.ea-email-body{flex:1;min-width:0}
+.ea-email-co{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ea-email-subj{font-size:10.5px;color:var(--txt-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.ea-email-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto}
+.ea-email-time{font-family:var(--mono);font-size:9.5px;color:var(--txt-4);white-space:nowrap}
+
+/* status badges + dots (green=ok, blue=info, amber=warn, red=fail) */
+.ea-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:var(--r-full);white-space:nowrap;letter-spacing:.02em;text-transform:capitalize}
+.ea-badge.ok{background:var(--green-subtle);color:var(--green)}
+.ea-badge.info{background:var(--blue-subtle);color:var(--blue)}
+.ea-badge.warn{background:var(--amber-subtle);color:var(--amber)}
+.ea-badge.fail{background:var(--red-subtle);color:var(--red)}
+.ea-badge.neutral{background:rgba(255,255,255,.04);color:var(--txt-4)}
+.ea-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--txt-4)}
+.ea-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green-glow)}
+.ea-dot.info{background:var(--blue);box-shadow:0 0 8px var(--blue-subtle)}
+.ea-dot.warn{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.ea-dot.fail{background:var(--red);box-shadow:0 0 8px rgba(251,93,116,.5)}
+.ea-dot.neutral{background:var(--txt-4)}
+
+/* cron items */
+.ea-cron-item{padding:var(--s3) 0;border-top:1px solid var(--border)}
+.ea-cron-item:first-child{border-top:none}
+.ea-cron-top{display:flex;align-items:center;gap:var(--s2)}
+.ea-cron-name{font-size:12px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ea-cron-sched{font-family:var(--mono);font-size:9.5px;color:var(--txt-4);margin-top:3px;padding-left:17px}
+.ea-cron-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin-top:var(--s2);padding-left:17px;font-family:var(--mono);font-size:10px;color:var(--txt-3)}
+.ea-cron-foot .ea-cron-emails{color:var(--green);font-weight:700;white-space:nowrap}
+.ea-cron-foot .ea-cron-detail{color:var(--txt-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* telegram items */
+.ea-tg-item{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;border-top:1px solid var(--border)}
+.ea-tg-item:first-child{border-top:none}
+.ea-tg-ic{width:28px;height:28px;flex:0 0 auto;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--blue-subtle);border:1px solid rgba(86,179,247,.3)}
+.ea-tg-body{flex:1;min-width:0}
+.ea-tg-txt{font-size:11.5px;font-weight:500;color:var(--txt-2);line-height:1.5}
+.ea-tg-time{font-family:var(--mono);font-size:9.5px;color:var(--txt-4);margin-top:2px}
+
+/* states */
+.ea-loading{font-family:var(--mono);font-size:11px;color:var(--txt-4);padding:var(--s5) 0;display:flex;align-items:center;gap:var(--s2)}
+.ea-loading .spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;flex:0 0 auto}
+.ea-error{padding:var(--s4) 0}
+.ea-error p{font-size:12px;color:var(--txt-3);margin-bottom:var(--s3)}
+.ea-empty{font-family:var(--mono);font-size:11px;color:var(--txt-4);padding:var(--s5) 0}
+.ea-retry{display:inline-flex;align-items:center;gap:6px;background:var(--glass-2);border:1px solid var(--border-2);color:var(--txt);font-family:var(--sans);font-weight:700;font-size:11.5px;padding:9px 16px;border-radius:var(--r-full);cursor:pointer;min-height:40px;transition:background var(--t-fast),border-color var(--t-fast)}
+.ea-retry:hover{background:var(--green-subtle);border-color:var(--border-glow)}
 </style>
 </head>
 <body>
@@ -678,6 +759,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
         <a href="#pipelineSection"><span class="qn">02</span> Pipeline health</a>
         <a href="#revenueSection"><span class="qn">03</span> Revenue to freedom</a>
         <a href="#siteStatusSection"><span class="qn">05</span> Site status</a>
+        <a href="#emailAutoSection"><span class="qn">06</span> Email &amp; cron</a>
       </nav>
       <div class="status" aria-live="polite">
         <span class="dot" id="statusDot" aria-hidden="true"></span>
@@ -1046,6 +1128,43 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
           <br>
           Niche sites are pulled live from Supabase (<code>outreach_companies.demo_site_url</code>); masters &amp; platform are fixed.
           Status is best-effort from the browser — a real HTTP code shows when the site allows cross-origin checks, otherwise the dot reflects whether the host responded at all.
+        </div>
+      </div>
+    </div>
+
+    <!-- DECISION 06 · EMAIL & AUTOMATION -->
+    <div class="section" id="emailAutoSection">
+      <div class="panel" id="emailAuto" role="region" aria-label="Email and automation monitor">
+        <div class="panel-head">
+          <span class="panel-label"><span class="ic">⑥</span> Email &amp; Automation</span>
+          <div class="ea-head-right">
+            <span class="panel-tag" id="eaStamp">loading…</span>
+            <button class="ea-refresh" id="eaRefresh" type="button" aria-label="Refresh email, cron and Telegram data">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+              <span class="lbl">Refresh</span>
+            </button>
+          </div>
+        </div>
+        <div class="ea-grid">
+          <!-- EMAIL ACTIVITY (Resend, server-side) -->
+          <div class="ea-col">
+            <div class="ea-col-head"><span class="ea-ic">✉️</span> Outreach Email <span class="ea-col-sub" id="eaEmailSrc">Resend</span></div>
+            <div id="eaEmailBody"><div class="ea-loading"><span class="spinner" aria-hidden="true"></span> Fetching email data…</div></div>
+          </div>
+          <!-- CRON STATUS -->
+          <div class="ea-col">
+            <div class="ea-col-head"><span class="ea-ic">⏱️</span> Cron Jobs <span class="ea-col-sub" id="eaCronSrc"></span></div>
+            <div id="eaCronBody"><div class="ea-loading"><span class="spinner" aria-hidden="true"></span> Loading cron status…</div></div>
+          </div>
+          <!-- TELEGRAM NOTIFICATIONS -->
+          <div class="ea-col">
+            <div class="ea-col-head"><span class="ea-ic">📨</span> Telegram Log <span class="ea-col-sub" id="eaTgSrc"></span></div>
+            <div id="eaTgBody"><div class="ea-loading"><span class="spinner" aria-hidden="true"></span> Loading notifications…</div></div>
+          </div>
+        </div>
+        <div class="ss-note" style="margin-top:var(--s6)">
+          Email totals &amp; rates are computed server-side by <code>/api/email-stats</code> (the Resend key stays on the server) and cached 5&nbsp;min.
+          Cron &amp; Telegram read <code>./cron-status.json</code> and <code>./telegram-log.json</code>, written by the outreach&nbsp;/&nbsp;Hermes systems.
         </div>
       </div>
     </div>
@@ -1991,6 +2110,178 @@ function initSiteStatus(){
   ssRender();
 }
 
+/* ════════════════ EMAIL & AUTOMATION (⑥) ════════════════ */
+// Email stats come from a server-side function (/api/email-stats) that holds the
+// Resend API key — the key is NEVER shipped to the browser. Cron + Telegram read
+// static JSON files (./cron-status.json, ./telegram-log.json) written by the
+// outreach / Hermes systems. Results are cached 5 min so we don't hammer Resend.
+const EA_CACHE_KEY = "mc_email_stats_v1";   // { fetchedAt:<ms>, data:{...} }
+const EA_TTL = 5*60*1000;                   // 5-minute client cache
+let EA_BUSY = false;
+
+function eaReadCache(){ try{ return JSON.parse(sessionStorage.getItem(EA_CACHE_KEY)); }catch(_){ return null; } }
+function eaWriteCache(d){ try{ sessionStorage.setItem(EA_CACHE_KEY, JSON.stringify({fetchedAt:Date.now(), data:d})); }catch(_){ } }
+
+function eaPct(x){ return (x==null||isNaN(x)) ? "—" : Math.round(x*100)+"%"; }
+function eaNum(n){ return (n==null||isNaN(n)) ? "0" : Number(n).toLocaleString("en-ZA"); }
+function eaTime(s){
+  if(!s) return "—";
+  // tolerate non-ISO shapes (e.g. "2026-06-27 23:26:25.588816+00") across browsers
+  let v=String(s).trim().replace(" ","T").replace(/(\.\d{3})\d+/,"$1").replace(/([+-]\d{2})$/,"$1:00");
+  let d=new Date(v); if(isNaN(d.getTime())) d=new Date(s);
+  return isNaN(d.getTime())?"—":relTime(d);
+}
+
+// last_event / status string -> {label, cls}  (ok=green, info=blue, warn=amber, fail=red)
+function eaEmailStatus(s){
+  const e=String(s||"").toLowerCase();
+  if(e.includes("complain")||e.includes("bounce")||e.includes("fail")) return {label:"bounced", cls:"fail"};
+  if(e.includes("click"))  return {label:"clicked",   cls:"ok"};
+  if(e.includes("open"))   return {label:"opened",    cls:"info"};
+  if(e.includes("deliver"))return {label:"delivered", cls:"ok"};
+  if(e.includes("sent")||e.includes("queue")||e.includes("schedul")) return {label:"sent", cls:"warn"};
+  return {label:e||"—", cls:"neutral"};
+}
+function eaCronCls(s){
+  const e=String(s||"").toLowerCase();
+  if(e.includes("success")||e.includes("ok")||e.includes("pass")||e.includes("done")) return "ok";
+  if(e.includes("warn")||e.includes("partial")||e.includes("skip")||e.includes("defer")) return "warn";
+  if(e.includes("fail")||e.includes("error")||e.includes("down")||e.includes("crash")) return "fail";
+  return "neutral";
+}
+const EA_RATE_COLOR = { ok:"var(--green)", info:"var(--blue)", warn:"var(--amber)", fail:"var(--red)", neutral:"var(--txt-3)" };
+
+// ── EMAIL column ──
+function eaRenderEmail(data, cached){
+  const host=$("#eaEmailBody"); if(!host) return;
+  const t=(data&&data.totals)||{}, r=(data&&data.rates)||{}, recent=(data&&data.recent)||[];
+  const srcEl=$("#eaEmailSrc"); if(srcEl) srcEl.textContent = cached ? "Resend · cached" : "Resend";
+  const rateRow=(label,val,cls)=>`
+    <div class="ea-rate">
+      <span class="ea-rate-l">${label}</span>
+      <span class="ea-rate-track"><i style="width:${Math.max(0,Math.min(100,(val||0)*100))}%;background:${EA_RATE_COLOR[cls]}"></i></span>
+      <span class="ea-rate-v">${eaPct(val)}</span>
+    </div>`;
+  const emails = recent.slice(0,5).map(e=>{
+    const st=eaEmailStatus(e.status);
+    return `<div class="ea-email">
+      <div class="ea-email-body">
+        <div class="ea-email-co">${esc(e.company||e.to||"—")}</div>
+        <div class="ea-email-subj">${esc(e.subject||"(no subject)")}</div>
+      </div>
+      <div class="ea-email-meta"><span class="ea-badge ${st.cls}">${esc(st.label)}</span><span class="ea-email-time">${eaTime(e.at)}</span></div>
+    </div>`;
+  }).join("") || `<div class="ea-empty">No emails sent yet.</div>`;
+  host.innerHTML=`
+    <div class="ea-stats">
+      <div class="ea-stat"><div class="ea-stat-n grn">${eaNum(t.today)}</div><div class="ea-stat-l">Today</div></div>
+      <div class="ea-stat"><div class="ea-stat-n">${eaNum(t.week)}</div><div class="ea-stat-l">This wk</div></div>
+      <div class="ea-stat"><div class="ea-stat-n">${eaNum(t.total)}</div><div class="ea-stat-l">Total</div></div>
+    </div>
+    <div class="ea-rates">
+      ${rateRow("Open", r.open, "info")}
+      ${rateRow("Click", r.click, "ok")}
+      ${rateRow("Bounce", r.bounce, "fail")}
+    </div>
+    <div class="ea-sub-label">Last 5 sent</div>
+    <div class="ea-list">${emails}</div>`;
+}
+function eaRenderEmailError(){
+  const host=$("#eaEmailBody"); if(!host) return;
+  host.innerHTML=`<div class="ea-error"><p>Unable to fetch email data.</p><button class="ea-retry" id="eaEmailRetry" type="button">↻ Retry</button></div>`;
+  const b=$("#eaEmailRetry");
+  if(b) b.addEventListener("click", ()=>{ host.innerHTML=`<div class="ea-loading"><span class="spinner" aria-hidden="true"></span> Fetching email data…</div>`; eaLoadEmail(true); });
+}
+async function eaLoadEmail(force){
+  try{
+    const cached=eaReadCache();
+    if(!force && cached && cached.data && (Date.now()-cached.fetchedAt < EA_TTL)){
+      eaRenderEmail(cached.data, true); return;
+    }
+    const res=await fetch("/api/email-stats",{cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const data=await res.json();
+    if(data && data.ok===false) throw new Error(data.error||"api error");
+    eaWriteCache(data);
+    eaRenderEmail(data, !!data.cached);
+  }catch(e){
+    console.warn("Email stats fetch failed", e);
+    const cached=eaReadCache();
+    if(cached && cached.data) eaRenderEmail(cached.data, true);   // fall back to last good
+    else eaRenderEmailError();
+  }
+}
+
+// ── CRON column ──
+function eaRenderCron(json){
+  const host=$("#eaCronBody"); if(!host) return;
+  const jobs=(json&&json.jobs)||[];
+  const srcEl=$("#eaCronSrc"); if(srcEl) srcEl.textContent = json&&json.updated_at ? eaTime(json.updated_at) : "";
+  if(!jobs.length){ host.innerHTML=`<div class="ea-empty">No cron data yet.</div>`; return; }
+  host.innerHTML=jobs.map(j=>{
+    const cls=eaCronCls(j.status);
+    const foot=(j.emails_sent!=null)
+      ? `<span class="ea-cron-emails">${eaNum(j.emails_sent)} emails</span>`
+      : `<span class="ea-cron-detail" title="${esc(j.detail||"")}">${esc(j.detail||"")}</span>`;
+    return `<div class="ea-cron-item">
+      <div class="ea-cron-top"><span class="ea-dot ${cls}"></span><span class="ea-cron-name">${esc(j.name||j.id||"job")}</span><span class="ea-badge ${cls}">${esc(j.status||"—")}</span></div>
+      <div class="ea-cron-sched">${esc(j.schedule||"")}</div>
+      <div class="ea-cron-foot"><span>last run ${eaTime(j.last_run)}</span>${foot}</div>
+    </div>`;
+  }).join("");
+}
+
+// ── TELEGRAM column ──
+function eaRenderTg(json){
+  const host=$("#eaTgBody"); if(!host) return;
+  const notes=(json&&(json.notifications||json.log))||[];
+  const srcEl=$("#eaTgSrc"); if(srcEl) srcEl.textContent = notes.length ? (Math.min(notes.length,5)+" recent") : "";
+  if(!notes.length){ host.innerHTML=`<div class="ea-empty">No notifications yet.</div>`; return; }
+  host.innerHTML=notes.slice(0,5).map(n=>{
+    const cls=eaCronCls(n.status||"success");
+    return `<div class="ea-tg-item">
+      <div class="ea-tg-ic">${esc(n.icon||"📨")}</div>
+      <div class="ea-tg-body"><div class="ea-tg-txt">${esc(n.text||n.message||"")}</div><div class="ea-tg-time">${eaTime(n.time||n.at||n.sent_at)}</div></div>
+      <span class="ea-dot ${cls}" style="align-self:center"></span>
+    </div>`;
+  }).join("");
+}
+async function eaLoadJson(path, render, kind){
+  const host = kind==="cron" ? $("#eaCronBody") : $("#eaTgBody");
+  try{
+    const r=await fetch(path,{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    render(await r.json());
+  }catch(e){
+    console.warn(kind+" fetch failed", e);
+    if(host) host.innerHTML = kind==="cron"
+      ? `<div class="ea-empty">No cron data yet.</div>`
+      : `<div class="ea-empty">No notifications yet.</div>`;
+  }
+}
+
+function eaSetStamp(){
+  const el=$("#eaStamp"); if(!el) return;
+  el.textContent="updated "+new Date().toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"});
+}
+async function eaRefreshAll(force){
+  if(EA_BUSY) return; EA_BUSY=true;
+  const btn=$("#eaRefresh"); if(btn){ btn.disabled=true; btn.classList.add("spin"); }
+  await Promise.all([
+    eaLoadEmail(force),
+    eaLoadJson("./cron-status.json", eaRenderCron, "cron"),
+    eaLoadJson("./telegram-log.json", eaRenderTg, "tg"),
+  ]);
+  eaSetStamp();
+  if(btn){ btn.disabled=false; btn.classList.remove("spin"); }
+  EA_BUSY=false;
+}
+function initEmailAuto(){
+  const btn=$("#eaRefresh");
+  if(btn) btn.addEventListener("click", ()=>{ toast("Refreshing email & automation…"); eaRefreshAll(true); });
+  eaRefreshAll(false);
+}
+
 /* ════════════════ DATA ORCHESTRATION ════════════════ */
 function applyData(){
   hasRenderedOnce = true;
@@ -2049,6 +2340,7 @@ function boot(){
   initQuickActions();
   initRefresh();
   initSiteStatus();
+  initEmailAuto();
   loadOutreachPack();
 
   // restore device-local state

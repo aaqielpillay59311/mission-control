@@ -1,0 +1,36 @@
+{
+  "updated_at": "2026-06-28T09:01:02+02:00",
+  "_note": "Placeholder/mock Telegram notification log. Overwritten by the outreach system. status: success | warning | fail.",
+  "notifications": [
+    {
+      "time": "2026-06-28T09:01:02+02:00",
+      "icon": "✉️",
+      "text": "Daily outreach complete — 14 emails sent to Cape Town leads",
+      "status": "success"
+    },
+    {
+      "time": "2026-06-28T08:47:00+02:00",
+      "icon": "💬",
+      "text": "Reply from Cape Apex Roofing — wants a call this week",
+      "status": "success"
+    },
+    {
+      "time": "2026-06-27T16:20:00+02:00",
+      "icon": "📨",
+      "text": "Follow-up 2 sent to Cape Flow Plumbing",
+      "status": "success"
+    },
+    {
+      "time": "2026-06-27T09:00:30+02:00",
+      "icon": "⚠️",
+      "text": "Resend rate limit hit — 2 emails deferred to next run",
+      "status": "warning"
+    },
+    {
+      "time": "2026-06-26T09:00:18+02:00",
+      "icon": "🎉",
+      "text": "Cape Pest Shield signed — R5,000/mo",
+      "status": "success"
+    }
+  ]
+}

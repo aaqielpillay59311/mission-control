@@ -1,0 +1,38 @@
+{
+  "updated_at": "2026-06-28T09:05:00+02:00",
+  "_note": "Placeholder/mock cron status. Overwritten by the outreach / Hermes systems. status: success | warning | fail.",
+  "jobs": [
+    {
+      "id": "daily-outreach",
+      "name": "Daily Outreach",
+      "schedule": "09:00 SAST · daily",
+      "last_run": "2026-06-28T09:00:12+02:00",
+      "status": "success",
+      "emails_sent": 14
+    },
+    {
+      "id": "hermes-refresh-data",
+      "name": "Hermes · refresh-data",
+      "schedule": "every 10 min",
+      "last_run": "2026-06-28T09:00:03+02:00",
+      "status": "success",
+      "detail": "pipeline + CRM synced"
+    },
+    {
+      "id": "hermes-mirror-sync",
+      "name": "Hermes · mirror sync",
+      "schedule": "02:00 SAST · daily",
+      "last_run": "2026-06-28T02:00:08+02:00",
+      "status": "warning",
+      "detail": "1 file skipped (locked)"
+    },
+    {
+      "id": "hermes-dream-engine",
+      "name": "Hermes · dream engine",
+      "schedule": "07:00 SAST · daily",
+      "last_run": "2026-06-28T07:00:21+02:00",
+      "status": "success",
+      "detail": "4 prescriptions written"
+    }
+  ]
+}
