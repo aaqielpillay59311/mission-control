@@ -1,0 +1,17 @@
+{
+  "generated": "2026-06-28",
+  "niche": "Pest Control",
+  "default_deal_value_zar": 5000,
+  "companies": [
+    { "company_name": "Verminator Pest Control", "outreach_status": "cold_sent", "next_action_date": "2026-06-30", "deal_value_zar": 5000 },
+    { "company_name": "SM Services & Projects", "outreach_status": "cold_sent", "next_action_date": "2026-06-29", "deal_value_zar": 5000 },
+    { "company_name": "Wanga Hygiene Solutions", "outreach_status": "followup_1_sent", "next_action_date": "2026-07-01", "deal_value_zar": 5000 },
+    { "company_name": "Plane Clean (Filteq)", "outreach_status": "not_contacted", "next_action_date": null, "deal_value_zar": 5000 },
+    { "company_name": "NRE Pest Control & Hygiene", "outreach_status": "not_contacted", "next_action_date": null, "deal_value_zar": 5000 },
+    { "company_name": "Evolution Pest & Hygiene", "outreach_status": "not_contacted", "next_action_date": null, "deal_value_zar": 5000 },
+    { "company_name": "Bird Deterrent Specialists", "outreach_status": "not_contacted", "next_action_date": null, "deal_value_zar": 5000 },
+    { "company_name": "KOVA Pest Control", "outreach_status": "replied", "next_action_date": "2026-07-02", "deal_value_zar": 6500 },
+    { "company_name": "Connor Pest Control", "outreach_status": "not_contacted", "next_action_date": null, "deal_value_zar": 5000 },
+    { "company_name": "Kilpest", "outreach_status": "followup_1_sent", "next_action_date": "2026-06-30", "deal_value_zar": 5000 }
+  ]
+}

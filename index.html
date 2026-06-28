@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="theme-color" content="#07070d">
+<meta name="description" content="Mission Control — Debt Freedom OS War Room. Private financial command dashboard.">
+<title>Mission Control · Debt Freedom OS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307070d'/%3E%3Cpath d='M32 12l16 9v14c0 10-7 16-16 18-9-2-16-8-16-18V21z' fill='none' stroke='%2322c55e' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════════════════ DESIGN TOKENS ════════════════ */
+:root{
+  /* Backgrounds */
+  --bg:#07070d;
+  --bg-elevated:#0a0a14;
+  --surface:#0c0c15;
+  --surface-alt:#10101c;
+  --surface-hover:#151526;
+  --border:rgba(255,255,255,.07);
+  --border-accent:rgba(255,255,255,.12);
+
+  /* Brand colors */
+  --green:#22c55e;
+  --green-d:#15803d;
+  --green-glow:rgba(34,197,94,.25);
+  --green-subtle:rgba(34,197,94,.08);
+  --red:#ef4444;
+  --red-d:#b91c1c;
+  --red-subtle:rgba(239,68,68,.08);
+  --amber:#f59e0b;
+  --amber-subtle:rgba(245,158,11,.08);
+  --blue:#38bdf8;
+  --blue-subtle:rgba(56,189,248,.08);
+  --purple:#a78bfa;
+
+  /* Text — WCAG AA 4.5:1+ verified */
+  --txt:#e7e9ee;
+  --txt-secondary:#b0b4be;
+  --txt-muted:#8a8f9c;
+  --txt-faint:#6b7180;
+
+  /* Typography */
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono','SF Mono','Cascadia Code','Fira Code',ui-monospace,Menlo,Consolas,monospace;
+
+  /* Spacing system (8px base) */
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-8:32px;
+  --space-10:40px;
+  --space-12:48px;
+
+  /* Radius */
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:18px;
+  --radius-xl:24px;
+  --radius-full:9999px;
+
+  /* Shadows */
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.5);
+  --shadow-glow-green:0 0 20px var(--green-glow);
+
+  /* Transitions */
+  --transition-fast:150ms cubic-bezier(.4,0,.2,1);
+  --transition-base:250ms cubic-bezier(.4,0,.2,1);
+  --transition-slow:400ms cubic-bezier(.4,0,.2,1);
+  --transition-bounce:400ms cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ════════════════ RESET ════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+html,body{
+  background:var(--bg);
+  color:var(--txt);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.6;
+}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(34,197,94,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(56,189,248,.05), transparent 55%),
+    var(--bg);
+  min-height:100vh;
+  padding:env(safe-area-inset-top) 0 var(--space-10);
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* ════════════════ SKIP LINK ════════════════ */
+.skip-link{
+  position:fixed;top:-100%;left:var(--space-4);z-index:9999;
+  background:var(--green);color:#05140a;
+  padding:var(--space-2) var(--space-4);
+  border-radius:0 0 var(--radius-sm) var(--radius-sm);
+  font-size:14px;font-weight:600;
+  transition:top var(--transition-fast);
+}
+.skip-link:focus{top:0}
+@media(prefers-reduced-motion:reduce){.skip-link{transition:none}}
+
+/* ════════════════ SCROLL PROGRESS BAR ════════════════ */
+.scroll-progress{
+  position:fixed;top:0;left:0;z-index:9998;
+  width:0;height:3px;
+  background:linear-gradient(90deg,var(--green),#86efac);
+  box-shadow:0 0 10px var(--green-glow);
+  transition:width 100ms linear;
+}
+
+/* ════════════════ PARTICLE CANVAS ════════════════ */
+#particles{
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;
+  opacity:.4;
+}
+@media(prefers-reduced-motion:reduce){#particles{display:none}}
+
+/* ════════════════ PASSCODE GATE ════════════════ */
+#gate{
+  position:fixed;inset:0;z-index:100;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--space-6);
+}
+#gate .box{
+  width:100%;max-width:360px;text-align:center;
+  animation:fadeUp .5s ease-out;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+#gate .shield{font-size:44px;margin-bottom:var(--space-4);display:block}
+#gate h1{
+  font-size:15px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--txt-muted);font-weight:600;
+  font-family:var(--sans);
+}
+#gate p{color:var(--txt-faint);font-size:13px;margin:var(--space-2) 0 var(--space-6)}
+#gate input{
+  width:100%;
+  background:var(--surface-alt);
+  border:1.5px solid var(--border);
+  color:var(--txt);
+  font-family:var(--mono);
+  font-size:20px;text-align:center;letter-spacing:.3em;
+  padding:16px 14px;
+  border-radius:var(--radius-md);
+  outline:none;
+  transition:border-color var(--transition-fast), box-shadow var(--transition-fast);
+  min-height:52px;
+}
+#gate input:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px var(--green-glow);
+}
+#gate button{
+  margin-top:var(--space-3);
+  width:100%;
+  background:var(--green);
+  color:#05140a;
+  border:none;
+  font-weight:700;
+  font-size:15px;letter-spacing:.05em;
+  padding:15px;
+  border-radius:var(--radius-md);
+  cursor:pointer;
+  transition:transform var(--transition-fast), box-shadow var(--transition-fast);
+  min-height:52px;
+}
+#gate button:hover{transform:translateY(-1px);box-shadow:var(--shadow-glow-green)}
+#gate button:active{transform:translateY(0);box-shadow:none}
+#gate button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+#gate .err{color:var(--red);font-size:13px;height:18px;margin-top:var(--space-2);font-weight:500}
+
+/* ════════════════ APP CONTAINER ════════════════ */
+#app{display:none;max-width:1200px;margin:0 auto;padding:0 var(--space-4);position:relative;z-index:1}
+
+/* ════════════════ HEADER ════════════════ */
+header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  flex-wrap:wrap;gap:var(--space-3);
+  padding:var(--space-7) var(--space-1) var(--space-5);
+}
+.brand{display:flex;align-items:center;gap:var(--space-3)}
+.brand .mk{width:32px;height:32px;flex:0 0 auto}
+.brand h1{font-size:18px;letter-spacing:.34em;text-transform:uppercase;font-weight:700}
+.brand h1 b{color:var(--green)}
+.brand .sub{color:var(--txt-faint);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-top:var(--space-1)}
+.stamp{
+  font-family:var(--mono);font-size:11px;
+  color:var(--txt-muted);text-align:right;line-height:1.7;
+}
+.stamp .dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+  margin-right:var(--space-1);
+  animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{50%{opacity:.35;transform:scale(.85)}}
+.stamp .faint{color:var(--txt-faint)}
+
+/* ════════════════ LAYOUT ════════════════ */
+.grid{display:grid;gap:var(--space-4)}
+.row2{grid-template-columns:1fr 1fr}
+@media(max-width:800px){.row2{grid-template-columns:1fr}}
+
+/* ════════════════ PANEL ════════════════ */
+.panel{
+  background:linear-gradient(180deg,var(--surface) 0%,var(--surface-alt) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:var(--space-5);
+  position:relative;overflow:hidden;
+  transition:border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.panel::before{
+  content:"";position:absolute;inset:0 0 auto 0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+}
+.panel:hover{
+  border-color:var(--border-accent);
+  box-shadow:0 4px 24px rgba(0,0,0,.3);
+}
+@media(hover:none){.panel:hover{border-color:var(--border);box-shadow:none}}
+
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:var(--space-4);
+}
+.panel-head .panel-label{
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--txt-muted);font-weight:600;
+}
+.panel-head .panel-tag{
+  font-family:var(--mono);font-size:10px;
+  color:var(--txt-faint);border:1px solid var(--border);
+  padding:3px 10px;border-radius:var(--radius-full);
+}
+
+.big{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;line-height:1}
+.muted{color:var(--txt-muted)}
+.faint{color:var(--txt-faint)}
+.grn{color:var(--green)}
+.red{color:var(--red)}
+.amb{color:var(--amber)}
+.blue{color:var(--blue)}
+
+/* ════════════════ THE WAR (HERO) ════════════════ */
+#war{
+  margin-bottom:var(--space-4);
+  text-align:center;
+  padding:var(--space-8) var(--space-5) var(--space-7);
+  background:
+    radial-gradient(700px 280px at 50% -30%, rgba(34,197,94,.15), transparent 70%),
+    linear-gradient(180deg,var(--surface) 0%,var(--surface-alt) 100%);
+  border-color:rgba(34,197,94,.22);
+  animation:panelEnter .6s ease-out;
+}
+@keyframes panelEnter{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.panel.enter{animation:panelEnter .5s ease-out both}
+.panel.enter:nth-child(2){animation-delay:.1s}
+.panel.enter:nth-child(3){animation-delay:.2s}
+.panel.enter:nth-child(4){animation-delay:.3s}
+
+#war .label{
+  font-size:11px;letter-spacing:.42em;text-transform:uppercase;
+  color:var(--txt-muted);font-weight:600;
+}
+#warDays{
+  font-size:clamp(64px,17vw,140px);
+  margin:var(--space-2) 0 0;
+  color:var(--green);
+  text-shadow:0 0 40px var(--green-glow);
+  line-height:1;
+  transition:text-shadow var(--transition-slow);
+}
+#war .unit{
+  font-size:13px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--txt-faint);margin-bottom:var(--space-1);
+}
+#warDate{font-family:var(--mono);font-size:14px;color:var(--txt);margin-top:var(--space-2)}
+#warDate b{color:var(--green)}
+.scenarios{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2);
+  max-width:560px;margin:var(--space-6) auto 0;
+}
+.scenario{
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:var(--space-3) var(--space-2);
+  transition:background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  cursor:default;
+}
+.scenario:hover{
+  background:var(--green-subtle);
+  border-color:rgba(34,197,94,.2);
+  transform:translateY(-2px);
+}
+@media(hover:none){.scenario:hover{background:rgba(255,255,255,.03);border-color:var(--border);transform:none}}
+.scenario .scenario-label{font-family:var(--mono);font-size:12px;color:var(--txt-muted)}
+.scenario .scenario-value{font-family:var(--mono);font-size:24px;font-weight:700;margin-top:var(--space-1)}
+.scenario .scenario-unit{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--txt-faint);margin-top:2px}
+#warNote{font-size:11px;color:var(--txt-faint);margin-top:var(--space-4);line-height:1.7;max-width:640px;margin-left:auto;margin-right:auto}
+#warPipe{
+  font-family:var(--mono);font-size:12px;
+  color:var(--blue);margin-top:var(--space-3);
+  animation:fadeUp .5s ease-out .3s both;
+}
+
+/* ════════════════ DEBT PANEL ════════════════ */
+.debt-top{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-1)}
+#debtTotal{font-size:clamp(30px,7vw,44px)}
+.debt-top .target-label{font-family:var(--mono);font-size:13px;color:var(--txt-faint)}
+.bar-track{
+  height:10px;border-radius:var(--radius-full);
+  background:rgba(255,255,255,.05);
+  overflow:hidden;margin:var(--space-3) 0 var(--space-1);
+}
+.bar-track .bar-fill{display:block;height:100%;border-radius:var(--radius-full);transition:width .5s ease}
+
+.accounts{list-style:none}
+.account-item{
+  display:flex;align-items:center;gap:var(--space-3);
+  padding:var(--space-3) 0;
+  border-top:1px solid var(--border);
+}
+.account-item:first-child{border-top:none}
+.account-item.is-target{
+  margin:0 calc(-1 * var(--space-3));
+  padding:var(--space-3);
+  background:var(--green-subtle);
+  border-radius:var(--radius-sm);
+  border-top:none;
+}
+.account-item .account-name{flex:1;min-width:0}
+.account-item .account-name strong{
+  font-size:13px;font-weight:600;display:block;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.account-item.is-target .account-name strong::after{
+  content:" ◂ TARGET";
+  color:var(--green);
+  font-size:9px;letter-spacing:.1em;font-weight:700;
+}
+.account-item .account-min-pay{
+  font-family:var(--mono);font-size:10px;color:var(--txt-faint);
+}
+.account-item .account-bar{
+  flex:0 0 84px;height:6px;border-radius:var(--radius-full);
+  background:rgba(255,255,255,.05);overflow:hidden;
+}
+.account-item .account-bar i{display:block;height:100%;border-radius:var(--radius-full)}
+.account-item .account-apr{
+  font-family:var(--mono);font-size:10px;
+  color:var(--amber);width:44px;text-align:right;
+}
+.account-item .account-balance{
+  font-family:var(--mono);font-size:13px;
+  width:78px;text-align:right;
+}
+
+.kpis{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:var(--space-2);margin-top:var(--space-4);
+}
+.kpi{
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:var(--space-3) var(--space-3);
+  transition:background var(--transition-fast);
+}
+.kpi:hover{background:rgba(255,255,255,.04)}
+.kpi .kpi-label{
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--txt-faint);
+}
+.kpi .kpi-value{
+  font-family:var(--mono);font-size:17px;font-weight:700;margin-top:var(--space-1);
+}
+
+.what-if{margin-top:var(--space-4);border-top:1px solid var(--border);padding-top:var(--space-4)}
+.what-if .wi-question{
+  font-size:11px;color:var(--txt-muted);margin-bottom:var(--space-2);
+}
+.what-if .wi-question .grn{font-weight:600}
+.what-if .wi-row{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.what-if input{
+  flex:1;min-width:120px;min-height:44px;
+  background:var(--surface-alt);
+  border:1.5px solid var(--border);
+  color:var(--txt);
+  font-family:var(--mono);
+  font-size:14px;padding:10px 12px;
+  border-radius:var(--radius-sm);
+  outline:none;
+  transition:border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.what-if input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
+.what-if .wi-result{
+  font-family:var(--mono);font-size:13px;
+  color:var(--green);white-space:nowrap;
+}
+
+details.budget{margin-top:var(--space-3)}
+details.budget summary{
+  font-size:11px;color:var(--txt-faint);
+  cursor:pointer;list-style:none;user-select:none;
+  padding:var(--space-1) 0;
+  transition:color var(--transition-fast);
+}
+details.budget summary:hover{color:var(--txt-muted)}
+details.budget summary::-webkit-details-marker{display:none}
+details.budget summary::before{content:"▸ ";color:var(--green);font-size:10px}
+details.budget[open] summary::before{content:"▾ "}
+details.budget summary:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:var(--radius-sm)}
+.budget-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:var(--space-4);margin-top:var(--space-3);
+}
+@media(max-width:520px){.budget-grid{grid-template-columns:1fr}}
+.budget-grid h4{
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--txt-muted);margin-bottom:var(--space-2);
+}
+.budget-line{
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:11px;
+  color:var(--txt-muted);padding:var(--space-1) 0;
+}
+.budget-line strong{color:var(--txt)}
+.budget-line.total{
+  border-top:1px solid var(--border);
+  margin-top:var(--space-1);padding-top:var(--space-2);
+  color:var(--txt);
+}
+
+/* ════════════════ REVENUE PANEL ════════════════ */
+.mrr-input-row{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)}
+.mrr-input-row .mrr-currency{
+  font-family:var(--mono);color:var(--txt-faint);font-size:22px;
+}
+.mrr-input-row input{
+  flex:1;min-height:52px;
+  background:transparent;
+  border:none;border-bottom:2px solid var(--border);
+  color:var(--green);
+  font-family:var(--mono);font-size:38px;font-weight:700;
+  padding:var(--space-1) 0;
+  outline:none;
+  transition:border-color var(--transition-fast);
+}
+.mrr-input-row input:focus{border-color:var(--green)}
+.mrr-input-row input::placeholder{color:rgba(34,197,94,.2)}
+.mrr-hint{font-size:11px;color:var(--txt-faint);margin-bottom:var(--space-5)}
+
+.gauge-track{
+  position:relative;
+  height:16px;
+  border-radius:var(--radius-full);
+  margin:var(--space-8) 0 var(--space-2);
+  background:linear-gradient(90deg,#2d0f0f 0%,#3a2c14 32%,#0f2d1a 100%);
+}
+.gauge-track .gauge-fill{
+  position:absolute;top:0;left:0;
+  height:100%;border-radius:var(--radius-full);
+  background:linear-gradient(90deg,var(--green),#86efac);
+  box-shadow:0 0 16px var(--green-glow);
+  transition:width .6s cubic-bezier(.34,1.56,.64,1);
+}
+.gauge-track .gauge-marker{
+  position:absolute;top:-8px;
+  width:2px;height:32px;
+  background:rgba(255,255,255,.5);
+  transition:opacity var(--transition-base);
+}
+.gauge-track .gauge-marker span{
+  position:absolute;top:-22px;left:50%;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  font-family:var(--mono);font-size:9px;color:var(--txt-muted);
+}
+.gauge-track .gauge-marker.break-even{background:var(--amber)}
+.gauge-track .gauge-marker.freedom{background:var(--green)}
+.gauge-labels{
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:10px;color:var(--txt-faint);
+  margin-top:var(--space-4);
+}
+.revenue-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:var(--space-2);margin-top:var(--space-4);
+}
+.revenue-stat{
+  text-align:center;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:var(--space-3) var(--space-2);
+  transition:background var(--transition-fast);
+}
+.revenue-stat:hover{background:rgba(255,255,255,.04)}
+.revenue-stat .rs-label{
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-faint);
+}
+.revenue-stat .rs-value{
+  font-family:var(--mono);font-size:16px;font-weight:700;margin-top:var(--space-1);
+}
+
+/* ════════════════ PIPELINE PANEL ════════════════ */
+.funnel{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-2)}
+@media(max-width:800px){.funnel{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:400px){.funnel{grid-template-columns:repeat(2,1fr)}}
+.stage{
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:var(--space-3) var(--space-3);
+  min-height:118px;
+  transition:background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+.stage:hover{
+  background:rgba(255,255,255,.04);
+  border-color:var(--border-accent);
+  transform:translateY(-1px);
+}
+@media(hover:none){.stage:hover{background:rgba(255,255,255,.025);border-color:var(--border);transform:none}}
+.stage .stage-count{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1}
+.stage .stage-label{
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txt-muted);margin:var(--space-1) 0 var(--space-2);
+}
+.stage .stage-company{
+  font-size:10px;color:var(--txt-faint);
+  line-height:1.6;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.stage.s0 .stage-count{color:var(--txt-faint)}
+.stage.s1 .stage-count{color:var(--blue)}
+.stage.s2 .stage-count,.stage.s3 .stage-count{color:var(--amber)}
+.stage.s4 .stage-count{color:var(--green)}
+.stage.s5{border-color:rgba(34,197,94,.35)}
+
+.actions{margin-top:var(--space-4);border-top:1px solid var(--border);padding-top:var(--space-3)}
+.actions .actions-head{
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--txt-muted);margin-bottom:var(--space-2);
+}
+.actions .action-item{
+  display:flex;align-items:center;gap:var(--space-2);
+  font-size:12px;padding:var(--space-2) 0;
+}
+.actions .action-item .pin{color:var(--amber)}
+.actions .action-none{font-size:12px;color:var(--txt-faint);padding:var(--space-2) 0}
+
+/* ════════════════ PIPELINE LOADER ════════════════ */
+.pipeline-loader{
+  text-align:center;padding:var(--space-6);
+  color:var(--txt-faint);font-size:12px;
+  font-family:var(--mono);
+}
+.pipeline-loader .spinner{
+  display:inline-block;width:18px;height:18px;
+  border:2px solid var(--border);
+  border-top-color:var(--green);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin-right:var(--space-2);vertical-align:middle;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ════════════════ FOOTER ════════════════ */
+footer{
+  text-align:center;
+  color:var(--txt-faint);
+  font-size:10px;margin-top:var(--space-7);
+  line-height:1.8;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+footer code{font-family:var(--mono);color:var(--txt-muted)}
+
+/* ════════════════ FOCUS VISIBLE ════════════════ */
+:focus-visible{
+  outline:2px solid var(--green);
+  outline-offset:2px;
+  border-radius:var(--radius-sm);
+}
+button:focus-visible,input:focus-visible,details summary:focus-visible{outline-offset:2px}
+
+/* ════════════════ REDUCED MOTION ════════════════ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  .stamp .dot{animation:none;opacity:1}
+  #warDays{text-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SKIP LINK ═══ -->
+<a href="#app" class="skip-link" aria-label="Skip to main content">Skip to content</a>
+
+<!-- ═══ SCROLL PROGRESS ═══ -->
+<div class="scroll-progress" id="scrollProgress" role="progressbar" aria-label="Page scroll progress"></div>
+
+<!-- ═══ PARTICLE BACKGROUND ═══ -->
+<canvas id="particles" aria-hidden="true"></canvas>
+
+<!-- ═══ PASSCODE GATE ═══ -->
+<div id="gate" role="dialog" aria-modal="true" aria-label="Passcode required">
+  <div class="box">
+    <span class="shield" role="img" aria-label="Shield icon">🛡️</span>
+    <h1>Mission Control</h1>
+    <p>Private. Enter passcode.</p>
+    <input id="pc" type="password" inputmode="numeric" autocomplete="off" autofocus placeholder="••••••" aria-label="Passcode">
+    <button id="go" aria-label="Unlock dashboard">Enter</button>
+    <div class="err" id="err" role="alert" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app" role="main" aria-label="Mission Control Dashboard">
+
+  <header role="banner">
+    <div class="brand">
+      <svg class="mk" viewBox="0 0 64 64" role="img" aria-label="Mission Control shield icon">
+        <path d="M32 6l22 11v18c0 14-9 22-22 25C19 57 10 49 10 35V17z" fill="none" stroke="#22c55e" stroke-width="3.5"/>
+        <path d="M23 33l7 7 12-15" fill="none" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>MISSION <b>CONTROL</b></h1>
+        <div class="sub">Debt Freedom OS &nbsp;·&nbsp; War Room</div>
+      </div>
+    </div>
+    <div class="stamp" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="liveStamp">live</span><br>
+      <span id="genStamp" class="faint"></span>
+    </div>
+  </header>
+
+  <!-- PANEL: THE WAR (hero) -->
+  <div class="panel enter" id="war" role="region" aria-label="Days to debt freedom countdown">
+    <div class="label">Days to debt freedom</div>
+    <div class="big" id="warDays" aria-live="polite">—</div>
+    <div class="unit">days</div>
+    <div id="warDate"></div>
+    <div id="warPipe"></div>
+    <div class="scenarios" id="scenarios"></div>
+    <div id="warNote"></div>
+  </div>
+
+  <div class="grid row2">
+    <!-- PANEL: DEBT COMMAND -->
+    <div class="panel enter" id="debt" role="region" aria-label="Debt command panel">
+      <div class="panel-head">
+        <span class="panel-label">① Debt Command</span>
+        <span class="panel-tag">avalanche · APR ▼</span>
+      </div>
+      <div class="debt-top">
+        <span class="big red" id="debtTotal" aria-live="polite">R0</span>
+        <span class="target-label">→ R0</span>
+      </div>
+      <div class="bar-track" role="progressbar" aria-label="Debt repayment progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <i class="bar-fill" id="debtBar" style="width:100%;background:linear-gradient(90deg,var(--red),#7f1d1d)"></i>
+      </div>
+      <div class="muted" style="font-size:11px;margin-bottom:var(--space-4)">7 accounts · paid top-down by interest rate</div>
+      <div id="accounts" role="list" aria-label="Debt accounts"></div>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-label">Monthly burn</div><div class="kpi-value amb" id="kpiBurn">R0</div></div>
+        <div class="kpi"><div class="kpi-label">Min payments</div><div class="kpi-value" id="kpiMin">R0</div></div>
+        <div class="kpi"><div class="kpi-label">Cash on hand</div><div class="kpi-value grn" id="kpiCash">R0</div></div>
+        <div class="kpi"><div class="kpi-label">Cash runway</div><div class="kpi-value" id="kpiRun">0 mo</div></div>
+      </div>
+      <div class="what-if">
+        <div class="wi-question">What-if · if client revenue = <span class="grn" id="wiEcho">R0</span>/mo, debt clears:</div>
+        <div class="wi-row">
+          <input id="wiIn" type="number" min="0" step="1000" placeholder="e.g. 20000" value="20000" aria-label="Additional monthly revenue for what-if calculation">
+          <span class="wi-result" id="wiResult" aria-live="polite">—</span>
+        </div>
+      </div>
+      <details class="budget" role="region" aria-label="Monthly budget breakdown">
+        <summary>Monthly budget breakdown</summary>
+        <div class="budget-grid">
+          <div>
+            <h4>Living · R4,900</h4>
+            <div class="budget-line"><span>Contramyl</span><strong>R1,200</strong></div>
+            <div class="budget-line"><span>Petrol</span><strong>R1,500</strong></div>
+            <div class="budget-line"><span>Data</span><strong>R800</strong></div>
+            <div class="budget-line"><span>Haircut</span><strong>R400</strong></div>
+            <div class="budget-line"><span>Car wash</span><strong>R200</strong></div>
+            <div class="budget-line"><span>Cigs</span><strong>R800</strong></div>
+          </div>
+          <div>
+            <h4>Debit orders · R5,696</h4>
+            <div class="budget-line"><span>Claude</span><strong>R3,236</strong></div>
+            <div class="budget-line"><span>Hermes</span><strong>R400</strong></div>
+            <div class="budget-line"><span>Hostinger</span><strong>R405</strong></div>
+            <div class="budget-line"><span>Helius</span><strong>R405</strong></div>
+            <div class="budget-line"><span>Jack AI (Skool)</span><strong>R1,250</strong></div>
+            <div class="budget-line total"><span>Income − burn − min</span><strong class="grn" id="budgetSurplus">+R516</strong></div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- PANEL: REVENUE TRACKER -->
+    <div class="panel enter" id="revenue" role="region" aria-label="Revenue tracker panel">
+      <div class="panel-head">
+        <span class="panel-label">③ Revenue Tracker</span>
+        <span class="panel-tag">MRR · saved locally</span>
+      </div>
+      <div class="mrr-input-row">
+        <span class="mrr-currency" aria-hidden="true">R</span>
+        <input id="mrr" type="number" min="0" step="500" placeholder="0" aria-label="Monthly recurring revenue amount">
+      </div>
+      <div class="mrr-hint">Current monthly recurring revenue — type your real number, it saves on this device.</div>
+
+      <div class="gauge-track" role="img" aria-label="Revenue gauge towards freedom MRR of R74,000">
+        <div class="gauge-fill" id="gaugeFill" style="width:0%"></div>
+        <div class="gauge-marker break-even" id="mkBreakEven" aria-hidden="true">
+          <span>break-even<br>R10,596</span>
+        </div>
+        <div class="gauge-marker freedom" style="left:calc(100% - 1px)" aria-hidden="true">
+          <span>freedom<br>R74,000</span>
+        </div>
+      </div>
+      <div class="gauge-labels"><span>R0</span><span id="gNow">R0 now</span><span>R74k</span></div>
+
+      <div class="revenue-stats">
+        <div class="revenue-stat"><div class="rs-label">vs break-even</div><div class="rs-value" id="rBreak">—</div></div>
+        <div class="revenue-stat"><div class="rs-label">to freedom MRR</div><div class="rs-value" id="rFree">—</div></div>
+        <div class="revenue-stat"><div class="rs-label">→ to debt / mo</div><div class="rs-value grn" id="rDebt">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: OUTREACH PIPELINE -->
+  <div class="panel enter" id="pipeline" style="margin-top:var(--space-4)" role="region" aria-label="Outreach pipeline panel">
+    <div class="panel-head">
+      <span class="panel-label">② Outreach Pipeline</span>
+      <span class="panel-tag" id="pipeMeta">pest control · 0</span>
+    </div>
+    <div id="funnelContainer">
+      <div class="pipeline-loader"><span class="spinner" aria-hidden="true"></span> Loading pipeline...</div>
+    </div>
+  </div>
+
+  <footer role="contentinfo">
+    Private dashboard · noindex · passcode-gated (obscurity, not encryption — data lives in this page).<br>
+    Change passcode &amp; refresh data: see <code>README.md</code>. Pipeline from <code>crm.json</code>.
+  </footer>
+</div>
+
+<script>
+/* ════════════════ CONFIG ════════════════ */
+// Passcode: SHA-256 hash. Default: "debtfree"
+const PASS_HASH = "6e858f1fe9bb5b0099a8ff51f0aeb25fe686f8068e4b54512b354bd9f6efa5bf";
+
+const DEBT_ACCOUNTS = [
+  { name:"Nedbank Credit",          balance:7975,   apr:1.75, minPay:610  },
+  { name:"Absa Credit Card 2",      balance:66877,  apr:1.75, minPay:2078 },
+  { name:"Absa Credit Card 1",      balance:110004, apr:1.75, minPay:3301 },
+  { name:"Capitec Access Facility", balance:113743, apr:1.75, minPay:6428 },
+  { name:"Capitec Credit",          balance:50611,  apr:1.67, minPay:3002 },
+  { name:"Absa Personal Loan",      balance:129008, apr:1.44, minPay:4522 },
+  { name:"Absa Car Loan",           balance:45825,  apr:1.02, minPay:3947 },
+];
+const TOTAL_DEBT     = 524043;
+const MONTHLY_BURN   = 10596;
+const MONTHLY_INCOME = 35000;
+const CASH_ON_HAND   = 140000;
+const MIN_PAYMENTS   = 23888;
+const RUNWAY_MONTHS  = 13.2;
+const BREAKEVEN      = MONTHLY_BURN;
+const FREEDOM_MRR    = 74000;
+const BASE_TO_DEBT   = MONTHLY_INCOME - MONTHLY_BURN;
+
+const FALLBACK_PIPELINE = {
+  generated:"2026-06-28", niche:"Pest Control", default_deal_value_zar:5000,
+  companies:[
+    {company_name:"Verminator Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"SM Services & Projects",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Wanga Hygiene Solutions",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Plane Clean (Filteq)",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"NRE Pest Control & Hygiene",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Evolution Pest & Hygiene",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Bird Deterrent Specialists",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"KOVA Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Connor Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Kilpest",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+  ]
+};
+
+/* ════════════════ UTILITIES ════════════════ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const rand = n => "R" + Math.round(n).toLocaleString("en-ZA");
+const randk = n => n>=1000 ? "R"+(n/1000).toFixed(n%1000?1:0)+"k" : "R"+Math.round(n);
+const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+
+/* ════════════════ PARTICLE BACKGROUND ════════════════ */
+function initParticles(){
+  const c = document.getElementById('particles');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  let particles = [], w, h, animId;
+
+  function resize(){
+    w = window.innerWidth;
+    h = window.innerHeight;
+    c.width = w * devicePixelRatio;
+    c.height = h * devicePixelRatio;
+    c.style.width = w + 'px';
+    c.style.height = h + 'px';
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+
+  function create(count){
+    particles = [];
+    for(let i=0; i<count; i++){
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.5 + .5,
+        dx: (Math.random() - .5) * .2,
+        dy: (Math.random() - .5) * .2,
+        alpha: Math.random() * .5 + .1,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * .02 + .005,
+      });
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, w, h);
+    const t = performance.now() / 1000;
+    for(const p of particles){
+      p.x += p.dx;
+      p.y += p.dy;
+      if(p.x < 0) p.x = w;
+      if(p.x > w) p.x = 0;
+      if(p.y < 0) p.y = h;
+      if(p.y > h) p.y = 0;
+      const twinkle = Math.sin(t * p.speed * 60 + p.phase) * .4 + .6;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${p.alpha * twinkle})`;
+      ctx.fill();
+    }
+    animId = requestAnimationFrame(draw);
+  }
+
+  resize();
+  create(120);
+  draw();
+
+  window.addEventListener('resize', ()=>{
+    resize();
+    create(120);
+  });
+}
+
+/* ════════════════ SCROLL PROGRESS ════════════════ */
+function initScrollProgress(){
+  const bar = document.getElementById('scrollProgress');
+  if(!bar) return;
+  const update = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? Math.min(scrollTop / docHeight * 100, 100) : 0;
+    bar.style.width = progress + '%';
+  };
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+}
+
+/* ════════════════ PASSCODE GATE ════════════════ */
+async function sha256(t){
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+async function tryUnlock(){
+  const v = $("#pc").value.trim();
+  if(!v) return;
+  const h = await sha256(v);
+  if(h === PASS_HASH){
+    sessionStorage.setItem("mc_unlocked","1");
+    unlock();
+  }else{
+    const err = $("#err");
+    err.textContent = "Wrong passcode.";
+    err.setAttribute('role','alert');
+    $("#pc").value=""; $("#pc").focus();
+  }
+}
+function unlock(){
+  $("#gate").style.display="none";
+  $("#app").style.display="block";
+  document.body.style.overflow = '';
+  boot();
+}
+$("#go").addEventListener("click", tryUnlock);
+$("#pc").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+// Focus trap: escape to close is not applicable (no close button), but passcode stays focused
+if(sessionStorage.getItem("mc_unlocked")==="1") unlock();
+
+/* ════════════════ DEBT FREEDOM CALC ════════════════ */
+function monthsToFreedom(clientMRR){
+  const pool = BASE_TO_DEBT + Math.max(0, clientMRR||0);
+  let accs = DEBT_ACCOUNTS.map(a=>({bal:a.balance, r:a.apr/100})).sort((x,y)=>y.r-x.r);
+  const firstInterest = accs.reduce((s,a)=>s+a.bal*a.r,0);
+  if(pool <= firstInterest) return Infinity;
+  let m=0;
+  while(m < 1200){
+    let total = accs.reduce((s,a)=>s+a.bal,0);
+    if(total <= 0.5) break;
+    m++;
+    for(const a of accs) a.bal += a.bal*a.r;
+    let pay = pool;
+    for(const a of accs){ if(pay<=0) break; const d=Math.min(a.bal,pay); a.bal-=d; pay-=d; }
+  }
+  return m;
+}
+const daysFrom = months => Math.round(months*30.44);
+function dateAfter(months){
+  const d = new Date(); d.setMonth(d.getMonth()+months);
+  return d.toLocaleDateString("en-ZA",{month:"short",year:"numeric"});
+}
+
+/* ════════════════ PIPELINE ════════════════ */
+const STAGES = [
+  {key:"not_contacted",   label:"Not Contacted", cls:"s0"},
+  {key:"cold_sent",       label:"Emailed",       cls:"s1"},
+  {key:"followup_1_sent", label:"Follow-up 1",   cls:"s2"},
+  {key:"followup_2_sent", label:"Follow-up 2",   cls:"s3"},
+  {key:"replied",         label:"Responded",     cls:"s4"},
+  {key:"won",             label:"Client",        cls:"s5"},
+];
+const STAGE_PROB = {not_contacted:.02,cold_sent:.05,followup_1_sent:.08,followup_2_sent:.10,replied:.40,won:1,lost:0};
+let PIPELINE_MRR = 0;
+
+function renderPipeline(data){
+  const cos = data.companies||[];
+  $("#pipeMeta").textContent = (data.niche||"pipeline").toLowerCase()+" · "+cos.length;
+  const byStage = {};
+  STAGES.forEach(s=>byStage[s.key]=[]);
+  cos.forEach(c=>{ (byStage[c.outreach_status]=byStage[c.outreach_status]||[]).push(c); });
+
+  const funnelHtml = STAGES.map(s=>{
+    const list = byStage[s.key]||[];
+    const names = list.map(c=>c.company_name).slice(0,5)
+      .map(n=>`<div class="stage-company">${n.length>22?n.slice(0,21)+"…":n}</div>`).join("")
+      || `<div class="stage-company faint">—</div>`;
+    return `<div class="stage ${s.cls}"><div class="stage-count">${list.length}</div><div class="stage-label">${s.label}</div>${names}</div>`;
+  }).join("");
+
+  const today = new Date().toISOString().slice(0,10);
+  const due = cos.filter(c=>c.next_action_date && c.next_action_date<=today
+    && ["cold_sent","followup_1_sent"].includes(c.outreach_status));
+
+  let actionsHtml;
+  if(due.length){
+    actionsHtml = due.map(c=>{
+      const nxt = c.outreach_status==="cold_sent" ? "follow-up 1" : "follow-up 2";
+      return `<div class="action-item"><span class="pin" aria-hidden="true">▸</span><strong>${c.company_name}</strong> <span class="faint">— send ${nxt} (due ${c.next_action_date})</span></div>`;
+    }).join("");
+  }else{
+    const remaining = cos.filter(c=>c.outreach_status==="not_contacted").length;
+    actionsHtml = `<div class="action-none">Nothing due today. ${remaining} still to first-contact.</div>`;
+  }
+
+  const pipelineFc = document.getElementById('funnelContainer');
+  pipelineFc.innerHTML = `<div class="funnel">${funnelHtml}</div><div class="actions"><div class="actions-head">⚡ Needs action today</div>${actionsHtml}</div>`;
+
+  PIPELINE_MRR = cos.reduce((s,c)=>s+(c.deal_value_zar||0)*(STAGE_PROB[c.outreach_status]||0),0);
+  renderWar();
+}
+
+/* ════════════════ RENDER: DEBT ════════════════ */
+function renderDebt(){
+  $("#debtTotal").textContent = rand(TOTAL_DEBT);
+  $("#kpiBurn").textContent = rand(MONTHLY_BURN);
+  $("#kpiMin").textContent  = rand(MIN_PAYMENTS);
+  $("#kpiCash").textContent = rand(CASH_ON_HAND);
+  $("#kpiRun").textContent  = RUNWAY_MONTHS+" mo";
+  const max = Math.max(...DEBT_ACCOUNTS.map(a=>a.balance));
+  const sorted = [...DEBT_ACCOUNTS].sort((a,b)=>b.apr-a.apr);
+  const container = document.getElementById('accounts');
+  container.innerHTML = sorted.map((a,i)=>`
+    <div class="account-item ${i===0?'is-target':''}" role="listitem">
+      <div class="account-name"><strong>${a.name}</strong><span class="account-min-pay">min ${rand(a.minPay)}/mo</span></div>
+      <div class="account-bar"><i style="width:${(a.balance/max*100).toFixed(0)}%;background:linear-gradient(90deg,var(--red),#b91c1c)"></i></div>
+      <div class="account-apr">${a.apr.toFixed(2)}%</div>
+      <div class="account-balance">${rand(a.balance)}</div>
+    </div>`).join("");
+
+  // Update progress bar for debt (how much paid, assuming target is 0)
+  const bar = document.getElementById('debtBar');
+  const debtProgEl = document.querySelector('.bar-track');
+  if(debtProgEl){
+    debtProgEl.setAttribute('aria-valuenow', Math.round((1 - TOTAL_DEBT/524043)*100));
+  }
+}
+function renderWhatif(){
+  const v = +($("#wiIn").value)||0;
+  $("#wiEcho").textContent = rand(v);
+  const m = monthsToFreedom(v);
+  $("#wiResult").textContent = isFinite(m) ? `${m} mo · ${dateAfter(m)}` : "never (revenue too low)";
+}
+$("#wiIn").addEventListener("input", renderWhatif);
+
+/* ════════════════ RENDER: REVENUE ════════════════ */
+function renderRevenue(){
+  const mrr = +($("#mrr").value)||0;
+  localStorage.setItem("mc_mrr", mrr);
+  const pct = Math.max(0, Math.min(100, mrr/FREEDOM_MRR*100));
+  $("#gaugeFill").style.width = pct+"%";
+  $("#mkBreakEven").style.left = (BREAKEVEN/FREEDOM_MRR*100)+"%";
+  $("#gNow").textContent = rand(mrr)+" now";
+  const vsB = mrr-BREAKEVEN;
+  $("#rBreak").innerHTML = vsB>=0 ? `<span class="grn">+${rand(vsB)}</span>` : `<span class="red">${rand(vsB)}</span>`;
+  $("#rFree").textContent = mrr>=FREEDOM_MRR ? "reached ✓" : rand(FREEDOM_MRR-mrr);
+  $("#rDebt").textContent = rand(BASE_TO_DEBT + Math.max(0,mrr));
+  renderWar();
+}
+$("#mrr").addEventListener("input", renderRevenue);
+
+/* ════════════════ RENDER: THE WAR ════════════════ */
+function renderWar(){
+  const mrr = +($("#mrr").value)||0;
+  const m = monthsToFreedom(mrr);
+  const warDaysEl = $("#warDays");
+  if(isFinite(m)){
+    const days = daysFrom(m);
+    warDaysEl.textContent = days.toLocaleString("en-ZA");
+    // Animate number if visible
+    $("#warDate").innerHTML = `≈ <strong>${m} months</strong> · debt-free by <strong>${dateAfter(m)}</strong>`;
+  }else{
+    warDaysEl.textContent = "∞";
+    $("#warDate").innerHTML = `revenue below break-even — <strong>get to ${rand(BREAKEVEN)}/mo first</strong>`;
+  }
+  const withPipe = monthsToFreedom(mrr + PIPELINE_MRR);
+  $("#warPipe").textContent = PIPELINE_MRR>0
+    ? `+ pipeline (≈${rand(PIPELINE_MRR)}/mo weighted) → ${isFinite(withPipe)?withPipe+" months":"—"}`
+    : "";
+  const scen = [5000,25000,50000].map(r=>{
+    const mm = monthsToFreedom(r);
+    return `<div class="scenario"><div class="scenario-label">${randk(r)}/mo</div><div class="scenario-value grn">${isFinite(mm)?mm+"mo":"∞"}</div><div class="scenario-unit">months</div></div>`;
+  }).join("");
+  $("#scenarios").innerHTML = scen;
+  $("#warNote").innerHTML = `Avalanche payoff of ${rand(TOTAL_DEBT)} across 7 accounts (highest APR first). `
+    + `Model: income ${rand(MONTHLY_INCOME)} − burn ${rand(MONTHLY_BURN)} = ${rand(BASE_TO_DEBT)}/mo attacks debt before any client revenue; `
+    + `every Rand of MRR adds on top. Interest accrues monthly per account APR.`;
+}
+
+/* ════════════════ BOOT ════════════════ */
+function boot(){
+  // Initialize particle background
+  initParticles();
+  initScrollProgress();
+
+  // Set generation stamp
+  $("#genStamp").textContent = "gen " + (FALLBACK_PIPELINE.generated||"");
+
+  // Render debt
+  renderDebt();
+
+  // Load saved MRR
+  $("#mrr").value = localStorage.getItem("mc_mrr") || "";
+  renderRevenue();
+  renderWhatif();
+
+  // Fetch pipeline
+  fetch("./pipeline.json",{cache:"no-store"})
+    .then(r=>r.ok?r.json():Promise.reject())
+    .then(d=>{
+      $("#genStamp").textContent="gen "+(d.generated||"");
+      renderPipeline(d);
+    })
+    .catch(()=>renderPipeline(FALLBACK_PIPELINE));
+
+  // Scroll reveal for panels
+  if(window.IntersectionObserver && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold:.1 });
+    $$('.panel').forEach(p=>{
+      p.style.opacity = '0';
+      p.style.transform = 'translateY(20px)';
+      p.style.transition = 'opacity .6s ease-out, transform .6s ease-out';
+      obs.observe(p);
+    });
+    // War panel is already visible — set it
+    const war = document.getElementById('war');
+    war.style.opacity = '1';
+    war.style.transform = 'translateY(0)';
+  }
+
+  // Live stamp
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-ZA', {hour:'2-digit',minute:'2-digit'});
+  document.getElementById('liveStamp').textContent = `live · ${timeStr}`;
+}
+</script>
+</body>
+</html>
