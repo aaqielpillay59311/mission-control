@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="theme-color" content="#07070d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Mission Control · Debt Freedom OS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307070d'/%3E%3Cpath d='M32 12l16 9v14c0 10-7 16-16 18-9-2-16-8-16-18V21z' fill='none' stroke='%2322c55e' stroke-width='4'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#07070d; --panel:#0c0c15; --panel2:#10101c; --line:rgba(255,255,255,.07);
+  --green:#22c55e; --green-d:#15803d; --green-glow:rgba(34,197,94,.25);
+  --red:#ef4444; --amber:#f59e0b; --blue:#38bdf8; --purple:#a78bfa;
+  --txt:#e7e9ee; --muted:#9ca3af; --faint:#6b7280;
+  --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --radius:14px; --radius-sm:10px; --radius-lg:18px;
+  --transition:200ms cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+html,body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(34,197,94,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(56,189,248,.04), transparent 55%),
+    var(--bg);
+  min-height:100vh; padding:env(safe-area-inset-top) 0 40px;
+}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+
+/* ── reduced motion ── */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ── passcode gate ── */
+#gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#gate .box{width:100%;max-width:340px;text-align:center;animation:fadeUp .5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+#gate .shield{margin-bottom:16px;display:inline-flex}
+#gate .shield svg{width:44px;height:44px}
+#gate h1{font-size:14px;letter-spacing:.35em;text-transform:uppercase;color:var(--muted);font-weight:600}
+#gate p{color:var(--faint);font-size:13px;margin:8px 0 24px;line-height:1.5}
+#gate input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  font-family:var(--mono);font-size:20px;text-align:center;letter-spacing:.35em;padding:16px;border-radius:var(--radius);outline:none;
+  transition:border-color var(--transition),box-shadow var(--transition)}
+#gate input:focus{border-color:var(--green);box-shadow:0 0 0 4px var(--green-glow)}
+#gate button{margin-top:14px;width:100%;background:var(--green);color:#05140a;border:none;font-weight:700;
+  font-size:15px;letter-spacing:.06em;padding:14px;border-radius:var(--radius);cursor:pointer;
+  transition:transform var(--transition),box-shadow var(--transition)}
+#gate button:hover{transform:translateY(-1px);box-shadow:0 4px 20px var(--green-glow)}
+#gate button:active{transform:translateY(0)}
+#gate .err{color:var(--red);font-size:13px;min-height:20px;margin-top:12px;font-weight:500}
+#gate .hint{color:var(--faint);font-size:11px;margin-top:20px;letter-spacing:.06em}
+
+/* ── app container ── */
+#app{display:none;max-width:1180px;margin:0 auto;padding:0 16px;animation:fadeUp .4s ease}
+
+/* ── header ── */
+header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  padding:28px 4px 20px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand .mk{width:32px;height:32px;flex:0 0 auto}
+.brand h1{font-size:16px;letter-spacing:.36em;text-transform:uppercase;font-weight:700}
+.brand h1 b{color:var(--green)}
+.sub{color:var(--faint);font-size:11px;letter-spacing:.22em;text-transform:uppercase;margin-top:4px}
+.stamp{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;line-height:1.8}
+.stamp .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);margin-right:7px;animation:pulse 2.4s infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+/* ── layout ── */
+.grid{display:grid;gap:16px}
+.row2{grid-template-columns:1fr 1fr}
+@media(max-width:820px){.row2{grid-template-columns:1fr}}
+
+.panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:var(--radius-lg);padding:22px;position:relative;overflow:hidden}
+.panel::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ph .t{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.ph .tag{font-family:var(--mono);font-size:10px;color:var(--faint);border:1px solid var(--line);
+  padding:4px 10px;border-radius:20px}
+
+.big{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;line-height:1}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .grn{color:var(--green)} .red{color:var(--red)} .amb{color:var(--amber)}
+
+/* ── THE WAR (hero) ── */
+#war{margin-bottom:16px;text-align:center;padding:34px 24px 28px;
+  background:
+    radial-gradient(700px 280px at 50% -40%, rgba(34,197,94,.16), transparent 70%),
+    radial-gradient(500px 200px at 50% 120%, rgba(34,197,94,.04), transparent 60%),
+    linear-gradient(180deg,var(--panel),var(--panel2));
+  border-color:rgba(34,197,94,.2)}
+#war .label{font-size:11px;letter-spacing:.45em;text-transform:uppercase;color:var(--muted);font-weight:600}
+#warDays{font-size:clamp(72px,18vw,150px);margin:8px 0 0;color:var(--green);line-height:1;
+  text-shadow:0 0 50px var(--green-glow);transition:text-shadow var(--transition)}
+#war .unit{font-size:13px;letter-spacing:.42em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+#warDate{font-family:var(--mono);font-size:14px;color:var(--txt);margin-top:8px}
+#warDate b{color:var(--green)}
+.scen{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:580px;margin:26px auto 0}
+.scen .s{background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 10px;
+  transition:background var(--transition),transform var(--transition),border-color var(--transition);cursor:default}
+.scen .s:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);transform:translateY(-2px)}
+.scen .s .r{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.scen .s .m{font-family:var(--mono);font-size:24px;font-weight:700;margin-top:4px}
+.scen .s .u{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+#warNote{font-size:12px;color:var(--faint);margin-top:18px;line-height:1.6;max-width:640px;margin-left:auto;margin-right:auto}
+#warPipe{font-family:var(--mono);font-size:12px;color:var(--blue);margin-top:12px}
+
+/* ── DEBT ── */
+.debtTop{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+#debtTotal{font-size:clamp(32px,7.5vw,44px)}
+.debtTop .to{font-family:var(--mono);font-size:13px;color:var(--faint)}
+.bar{height:8px;border-radius:5px;background:rgba(255,255,255,.05);overflow:hidden;margin:14px 0 6px}
+.bar>i{display:block;height:100%;border-radius:5px}
+.acc{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);
+  transition:background var(--transition);margin:0 -6px;padding:11px 6px;border-radius:var(--radius-sm)}
+.acc:hover{background:rgba(255,255,255,.03)}
+.acc:first-of-type{border-top:none}
+.acc .nm{flex:1;min-width:0}
+.acc .nm b{font-size:13px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc .nm .mp{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.acc .gbar{flex:0 0 88px;height:6px;border-radius:4px;background:rgba(255,255,255,.04);overflow:hidden}
+.acc .gbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--red),#b91c1c);border-radius:4px}
+.acc .bal{font-family:var(--mono);font-size:13px;width:76px;text-align:right}
+.acc .apr{font-family:var(--mono);font-size:10px;color:var(--amber);width:44px;text-align:right}
+.acc.target{margin:0 -6px;padding:11px 6px;background:rgba(34,197,94,.07);border-radius:var(--radius-sm);border-top:none}
+.acc.target .nm b::after{content:" ◂ TARGET";color:var(--green);font-size:9px;letter-spacing:.12em;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.kpi{background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;
+  transition:background var(--transition),border-color var(--transition)}
+.kpi:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}
+.kpi .k{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.kpi .v{font-family:var(--mono);font-size:17px;font-weight:700;margin-top:4px}
+.whatif{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+.whatif .q{font-size:12px;color:var(--muted);margin-bottom:10px}
+.whatif .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.whatif input{flex:1;min-width:130px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  font-family:var(--mono);font-size:14px;padding:11px 13px;border-radius:var(--radius-sm);outline:none;
+  transition:border-color var(--transition),box-shadow var(--transition)}
+.whatif input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
+.whatif .out{font-family:var(--mono);font-size:14px;color:var(--green);white-space:nowrap;font-weight:600}
+details.bd{margin-top:14px}
+details.bd summary{font-size:12px;color:var(--faint);cursor:pointer;list-style:none;user-select:none;
+  padding:8px 0;transition:color var(--transition)}
+details.bd summary:hover{color:var(--muted)}
+details.bd summary::-webkit-details-marker{display:none}
+details.bd summary::before{content:"▸ ";color:var(--green);transition:transform var(--transition)}
+details.bd[open] summary::before{content:"▾ "}
+.bdgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+@media(max-width:520px){.bdgrid{grid-template-columns:1fr}}
+.bdgrid h4{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ln{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);padding:3px 0}
+.ln b{color:var(--txt)} .ln.tot{border-top:1px solid var(--line);margin-top:6px;padding-top:6px;color:var(--txt)}
+
+/* ── REVENUE ── */
+.mrrIn{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mrrIn .cur{font-family:var(--mono);color:var(--faint);font-size:22px}
+.mrrIn input{flex:1;background:transparent;border:none;border-bottom:2px solid var(--line);color:var(--green);
+  font-family:var(--mono);font-size:36px;font-weight:700;padding:4px 0;outline:none;width:100%;
+  transition:border-color var(--transition)}
+.mrrIn input:focus{border-color:var(--green)}
+.mrrSub{font-size:12px;color:var(--faint);margin-bottom:20px;line-height:1.5}
+.gauge{position:relative;height:16px;border-radius:10px;margin:34px 0 10px;
+  background:linear-gradient(90deg,#3a1414 0%,#3a2c14 32%,#143a1d 100%)}
+.gauge .fill{position:absolute;top:0;left:0;height:100%;border-radius:10px;
+  background:linear-gradient(90deg,var(--green),#86efac);box-shadow:0 0 18px var(--green-glow);transition:width .6s cubic-bezier(.16,1,.3,1)}
+.gauge .mk{position:absolute;top:-8px;width:2px;height:32px;background:rgba(255,255,255,.4)}
+.gauge .mk span{position:absolute;top:-22px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--mono);font-size:10px;color:var(--muted)}
+.gauge .mk.b{background:var(--amber)} .gauge .mk.f{background:var(--green)}
+.glabels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:16px}
+.rstat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.rstat .c{text-align:center;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px 8px;
+  transition:background var(--transition),border-color var(--transition)}
+.rstat .c:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}
+.rstat .c .l{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.rstat .c .v{font-family:var(--mono);font-size:16px;font-weight:700;margin-top:4px}
+
+/* ── PIPELINE ── */
+.funnel{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+@media(max-width:820px){.funnel{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:400px){.funnel{grid-template-columns:repeat(2,1fr)}}
+.stage{background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 10px;min-height:120px;
+  transition:background var(--transition),transform var(--transition),border-color var(--transition);cursor:default}
+.stage:hover{background:rgba(255,255,255,.045);transform:translateY(-2px);border-color:rgba(255,255,255,.12)}
+.stage .cnt{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1}
+.stage .nm{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0 10px}
+.stage .co{font-size:10px;color:var(--faint);line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage.s0 .cnt{color:var(--faint)} .stage.s1 .cnt{color:var(--blue)}
+.stage.s2 .cnt,.stage.s3 .cnt{color:var(--amber)} .stage.s4 .cnt{color:var(--green)}
+.stage.s5{border-color:rgba(34,197,94,.35)} .stage.s5 .cnt{color:var(--green)}
+.act{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.act .h{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.act .item{display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 0}
+.act .item .pin{color:var(--amber)} .act .none{font-size:13px;color:var(--faint);line-height:1.6}
+.act .item b{font-weight:600}
+
+/* ── footer ── */
+footer{text-align:center;color:var(--faint);font-size:11px;margin-top:30px;line-height:1.8}
+footer code{font-family:var(--mono);color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="box">
+    <div class="shield">
+      <svg viewBox="0 0 64 64" width="44" height="44"><rect width="64" height="64" rx="14" fill="#0c0c15"/><path d="M32 8l20 10v16c0 13-8 20-20 23-12-3-20-10-20-23V18z" fill="none" stroke="#22c55e" stroke-width="3.5"/><path d="M23 33l7 7 12-14" fill="none" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h1>Mission Control</h1>
+    <p>Debt Freedom OS · passcode required</p>
+    <input id="pc" type="password" inputmode="text" autocomplete="off" autofocus placeholder="passcode" aria-label="Passcode">
+    <button id="go">Enter</button>
+    <div class="err" id="err"></div>
+    <div class="hint">press Enter to submit</div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="brand">
+      <svg class="mk" viewBox="0 0 64 64"><path d="M32 6l22 11v18c0 14-9 22-22 25C19 57 10 49 10 35V17z" fill="none" stroke="#22c55e" stroke-width="3.5"/><path d="M23 33l7 7 12-15" fill="none" stroke="#22c55e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <h1>MISSION <b>CONTROL</b></h1>
+        <div class="sub">Debt Freedom OS · War Room</div>
+      </div>
+    </div>
+    <div class="stamp"><span class="dot"></span><span id="liveStamp">live</span><br><span id="genStamp" class="faint"></span></div>
+  </header>
+
+  <!-- PANEL 4 — THE WAR (hero) -->
+  <div class="panel" id="war">
+    <div class="label">Days to debt freedom</div>
+    <div class="big" id="warDays">—</div>
+    <div class="unit">days</div>
+    <div id="warDate"></div>
+    <div id="warPipe"></div>
+    <div class="scen" id="scen"></div>
+    <div id="warNote"></div>
+  </div>
+
+  <div class="grid row2">
+    <!-- PANEL 1 — DEBT COMMAND -->
+    <div class="panel" id="debt">
+      <div class="ph"><span class="t">Debt Command</span><span class="tag">avalanche · APR ▼</span></div>
+      <div class="debtTop">
+        <span class="big red" id="debtTotal">R0</span>
+        <span class="to">→ R0</span>
+      </div>
+      <div class="bar"><i id="debtBar" style="width:100%;background:linear-gradient(90deg,var(--red),#7f1d1d)"></i></div>
+      <div class="muted" style="font-size:12px;margin-bottom:16px">7 accounts · paid top-down by interest rate</div>
+      <div id="accs"></div>
+      <div class="kpis">
+        <div class="kpi"><div class="k">Monthly burn</div><div class="v amb" id="kBurn">R0</div></div>
+        <div class="kpi"><div class="k">Min payments</div><div class="v" id="kMin">R0</div></div>
+        <div class="kpi"><div class="k">Cash on hand</div><div class="v grn" id="kCash">R0</div></div>
+        <div class="kpi"><div class="k">Cash runway</div><div class="v" id="kRun">0 mo</div></div>
+      </div>
+      <div class="whatif">
+        <div class="q">What-if · if client revenue = <span class="grn" id="wiEcho">R0</span>/mo, debt clears:</div>
+        <div class="row">
+          <input id="wiIn" type="number" min="0" step="1000" placeholder="e.g. 20000" value="20000">
+          <span class="out" id="wiOut">—</span>
+        </div>
+      </div>
+      <details class="bd">
+        <summary>Monthly budget breakdown</summary>
+        <div class="bdgrid">
+          <div>
+            <h4>Living · R4,900</h4>
+            <div class="ln"><span>Contramyl</span><b>R1,200</b></div>
+            <div class="ln"><span>Petrol</span><b>R1,500</b></div>
+            <div class="ln"><span>Data</span><b>R800</b></div>
+            <div class="ln"><span>Haircut</span><b>R400</b></div>
+            <div class="ln"><span>Car wash</span><b>R200</b></div>
+            <div class="ln"><span>Cigs</span><b>R800</b></div>
+          </div>
+          <div>
+            <h4>Debit orders · R5,696</h4>
+            <div class="ln"><span>Claude</span><b>R3,236</b></div>
+            <div class="ln"><span>Hermes</span><b>R400</b></div>
+            <div class="ln"><span>Hostinger</span><b>R405</b></div>
+            <div class="ln"><span>Helius</span><b>R405</b></div>
+            <div class="ln"><span>Jack AI (Skool)</span><b>R1,250</b></div>
+            <div class="ln tot"><span>Income − burn − min</span><b class="grn">+R516</b></div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- PANEL 3 — REVENUE TRACKER -->
+    <div class="panel" id="rev">
+      <div class="ph"><span class="t">Revenue Tracker</span><span class="tag">MRR · saved locally</span></div>
+      <div class="mrrIn"><span class="cur">R</span><input id="mrr" type="number" min="0" step="500" placeholder="0" aria-label="Monthly recurring revenue"></div>
+      <div class="mrrSub">Current monthly recurring revenue — type your real number, it saves on this device.</div>
+
+      <div class="gauge">
+        <div class="fill" id="gFill" style="width:0%"></div>
+        <div class="mk b" id="mkBreak"><span>break-even<br>R10,596</span></div>
+        <div class="mk f" style="left:calc(100% - 1px)"><span>freedom<br>R74,000</span></div>
+      </div>
+      <div class="glabels"><span>R0</span><span id="gNow">R0 now</span><span>R74k</span></div>
+
+      <div class="rstat">
+        <div class="c"><div class="l">vs break-even</div><div class="v" id="rBreak">—</div></div>
+        <div class="c"><div class="l">to freedom MRR</div><div class="v" id="rFree">—</div></div>
+        <div class="c"><div class="l">→ to debt / mo</div><div class="v grn" id="rDebt">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2 — OUTREACH PIPELINE -->
+  <div class="panel" id="pipe" style="margin-top:16px">
+    <div class="ph"><span class="t">Outreach Pipeline</span><span class="tag" id="pipeMeta">pest control · 0</span></div>
+    <div class="funnel" id="funnel"></div>
+    <div class="act">
+      <div class="h">Needs action today</div>
+      <div id="todo"></div>
+    </div>
+  </div>
+
+  <footer>
+    Private dashboard · passcode-gated (obscurity, not encryption — data lives in this page).<br>
+    Change passcode &amp; refresh data: see <code>README.md</code>. Pipeline from <code>outreach/crm.json</code>.
+  </footer>
+</div>
+
+<script>
+/* ════════════════ CONFIG — edit these ════════════════ */
+// Passcode: SHA-256 hash. Default passcode is "debtfree".
+// To change: run  py -c "import hashlib;print(hashlib.sha256(b'YOURCODE').hexdigest())"  and paste below.
+const PASS_HASH = "6e858f1fe9bb5b0099a8ff51f0aeb25fe686f8068e4b54512b354bd9f6efa5bf";
+
+// ── Real debt data (Debt Freedom OS) ──
+const DEBT_ACCOUNTS = [
+  { name:"Nedbank Credit",          balance:7975,   apr:1.75, minPay:610  },
+  { name:"Absa Credit Card 2",      balance:66877,  apr:1.75, minPay:2078 },
+  { name:"Absa Credit Card 1",      balance:110004, apr:1.75, minPay:3301 },
+  { name:"Capitec Access Facility", balance:113743, apr:1.75, minPay:6428 },
+  { name:"Capitec Credit",          balance:50611,  apr:1.67, minPay:3002 },
+  { name:"Absa Personal Loan",      balance:129008, apr:1.44, minPay:4522 },
+  { name:"Absa Car Loan",           balance:45825,  apr:1.02, minPay:3947 },
+];
+const TOTAL_DEBT     = 524043;
+const MONTHLY_BURN   = 10596;   // living 4900 + debit orders 5696 (EXCLUDES debt payments)
+const MONTHLY_INCOME = 35000;
+const CASH_ON_HAND   = 140000;
+const MIN_PAYMENTS   = 23888;
+const RUNWAY_MONTHS  = 13.2;
+const BREAKEVEN      = MONTHLY_BURN;          // 10,596 — covers life
+const FREEDOM_MRR    = 74000;                 // burn + full debt-attack capacity
+// Every Rand of (income + client MRR) above the burn attacks debt:
+const BASE_TO_DEBT   = MONTHLY_INCOME - MONTHLY_BURN;  // 24,404/mo before any client revenue
+/* ═════════════════════════════════════════════════════ */
+
+// Fallback pipeline (used if ./pipeline.json can't be fetched, e.g. opened as a local file)
+const FALLBACK_PIPELINE = {
+  generated:"2026-06-28", niche:"Pest Control", default_deal_value_zar:5000,
+  companies:[
+    {company_name:"Verminator Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"SM Services & Projects",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Wanga Hygiene Solutions",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Plane Clean (Filteq)",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"NRE Pest Control & Hygiene",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Evolution Pest & Hygiene",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Bird Deterrent Specialists",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"KOVA Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Connor Pest Control",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+    {company_name:"Kilpest",outreach_status:"not_contacted",next_action_date:null,deal_value_zar:5000},
+  ]
+};
+
+const $ = s => document.querySelector(s);
+const rand = n => "R" + Math.round(n).toLocaleString("en-ZA");
+const randk = n => n>=1000 ? "R"+(n/1000).toFixed(n%1000?1:0)+"k" : "R"+Math.round(n);
+
+/* ── passcode gate ── */
+async function sha256(t){
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+async function tryUnlock(){
+  const v = $("#pc").value.trim();
+  if(!v) return;
+  const h = await sha256(v);
+  if(h === PASS_HASH){
+    sessionStorage.setItem("mc_unlocked","1");
+    unlock();
+  }else{
+    $("#err").textContent = "Wrong passcode.";
+    $("#pc").value=""; $("#pc").focus();
+  }
+}
+function unlock(){
+  $("#gate").style.display="none";
+  $("#app").style.display="block";
+  boot();
+}
+$("#go").addEventListener("click", tryUnlock);
+$("#pc").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+if(sessionStorage.getItem("mc_unlocked")==="1") unlock();
+
+/* ── avalanche amortization: months to clear all debt given extra client MRR ── */
+function monthsToFreedom(clientMRR){
+  const pool = BASE_TO_DEBT + Math.max(0, clientMRR||0);   // total /mo thrown at debt
+  let accs = DEBT_ACCOUNTS.map(a=>({bal:a.balance, r:a.apr/100})).sort((x,y)=>y.r-x.r);
+  // sanity: if pool can't beat the interest, it's never paid
+  const firstInterest = accs.reduce((s,a)=>s+a.bal*a.r,0);
+  if(pool <= firstInterest) return Infinity;
+  let m=0;
+  while(m < 1200){
+    let total = accs.reduce((s,a)=>s+a.bal,0);
+    if(total <= 0.5) break;
+    m++;
+    for(const a of accs) a.bal += a.bal*a.r;       // accrue interest
+    let pay = pool;                                 // attack highest APR first
+    for(const a of accs){ if(pay<=0) break; const d=Math.min(a.bal,pay); a.bal-=d; pay-=d; }
+  }
+  return m;
+}
+const daysFrom = months => Math.round(months*30.44);
+function dateAfter(months){
+  const d = new Date(); d.setMonth(d.getMonth()+months);
+  return d.toLocaleDateString("en-ZA",{month:"short",year:"numeric"});
+}
+
+/* ── pipeline ── */
+const STAGES = [
+  {key:"not_contacted",   label:"Not Contacted", cls:"s0"},
+  {key:"cold_sent",       label:"Emailed",       cls:"s1"},
+  {key:"followup_1_sent", label:"Follow-up 1",   cls:"s2"},
+  {key:"followup_2_sent", label:"Follow-up 2",   cls:"s3"},
+  {key:"replied",         label:"Responded",     cls:"s4"},
+  {key:"won",             label:"Client",        cls:"s5"},
+];
+const STAGE_PROB = {not_contacted:.02,cold_sent:.05,followup_1_sent:.08,followup_2_sent:.10,replied:.40,won:1,lost:0};
+
+function renderPipeline(data){
+  const cos = data.companies||[];
+  $("#pipeMeta").textContent = (data.niche||"pipeline").toLowerCase()+" · "+cos.length;
+  const byStage = {};
+  STAGES.forEach(s=>byStage[s.key]=[]);
+  cos.forEach(c=>{ (byStage[c.outreach_status]=byStage[c.outreach_status]||[]).push(c); });
+
+  $("#funnel").innerHTML = STAGES.map(s=>{
+    const list = byStage[s.key]||[];
+    const names = list.map(c=>c.company_name).slice(0,5)
+      .map(n=>`<div class="co">${n.length>22?n.slice(0,21)+"…":n}</div>`).join("")
+      || `<div class="co faint">—</div>`;
+    return `<div class="stage ${s.cls}"><div class="cnt">${list.length}</div><div class="nm">${s.label}</div>${names}</div>`;
+  }).join("");
+
+  // needs action today: cold_sent / followup_1_sent with next_action_date <= today
+  const today = new Date().toISOString().slice(0,10);
+  const due = cos.filter(c=>c.next_action_date && c.next_action_date<=today
+    && ["cold_sent","followup_1_sent"].includes(c.outreach_status));
+  $("#todo").innerHTML = due.length
+    ? due.map(c=>{
+        const nxt = c.outreach_status==="cold_sent" ? "follow-up 1" : "follow-up 2";
+        return `<div class="item"><span class="pin">▸</span><b>${c.company_name}</b><span class="faint"> — send ${nxt} (due ${c.next_action_date})</span></div>`;
+      }).join("")
+    : `<div class="none">Nothing due today. ${cos.filter(c=>c.outreach_status==="not_contacted").length} still to first-contact.</div>`;
+
+  // expected pipeline MRR (rough), feeds The War "with pipeline" line
+  PIPELINE_MRR = cos.reduce((s,c)=>s+(c.deal_value_zar||0)*(STAGE_PROB[c.outreach_status]||0),0);
+  renderWar();
+}
+let PIPELINE_MRR = 0;
+
+/* ── render: debt ── */
+function renderDebt(){
+  $("#debtTotal").textContent = rand(TOTAL_DEBT);
+  $("#kBurn").textContent = rand(MONTHLY_BURN);
+  $("#kMin").textContent  = rand(MIN_PAYMENTS);
+  $("#kCash").textContent = rand(CASH_ON_HAND);
+  $("#kRun").textContent  = RUNWAY_MONTHS+" mo";
+  const max = Math.max(...DEBT_ACCOUNTS.map(a=>a.balance));
+  const sorted = [...DEBT_ACCOUNTS].sort((a,b)=>b.apr-a.apr);
+  $("#accs").innerHTML = sorted.map((a,i)=>`
+    <div class="acc ${i===0?"target":""}">
+      <div class="nm"><b>${a.name}</b><span class="mp">min ${rand(a.minPay)}/mo</span></div>
+      <div class="gbar"><i style="width:${(a.balance/max*100).toFixed(0)}%"></i></div>
+      <div class="apr">${a.apr.toFixed(2)}%</div>
+      <div class="bal">${rand(a.balance)}</div>
+    </div>`).join("");
+}
+function renderWhatif(){
+  const v = +$("#wiIn").value||0;
+  $("#wiEcho").textContent = rand(v);
+  const m = monthsToFreedom(v);
+  $("#wiOut").textContent = isFinite(m) ? `${m} mo · ${dateAfter(m)}` : "never (revenue too low)";
+}
+$("#wiIn").addEventListener("input", renderWhatif);
+
+/* ── render: revenue ── */
+function renderRevenue(){
+  const mrr = +($("#mrr").value)||0;
+  localStorage.setItem("mc_mrr", mrr);
+  const pct = Math.max(0, Math.min(100, mrr/FREEDOM_MRR*100));
+  $("#gFill").style.width = pct+"%";
+  $("#mkBreak").style.left = (BREAKEVEN/FREEDOM_MRR*100)+"%";
+  $("#gNow").textContent = rand(mrr)+" now";
+  const vsB = mrr-BREAKEVEN;
+  $("#rBreak").innerHTML = vsB>=0 ? `<span class="grn">+${rand(vsB)}</span>` : `<span class="red">${rand(vsB)}</span>`;
+  $("#rFree").textContent = mrr>=FREEDOM_MRR ? "reached ✓" : rand(FREEDOM_MRR-mrr);
+  $("#rDebt").textContent = rand(BASE_TO_DEBT + Math.max(0,mrr));
+  renderWar();
+}
+$("#mrr").addEventListener("input", renderRevenue);
+
+/* ── render: The War ── */
+function renderWar(){
+  const mrr = +($("#mrr").value)||0;
+  const m = monthsToFreedom(mrr);
+  if(isFinite(m)){
+    $("#warDays").textContent = daysFrom(m).toLocaleString("en-ZA");
+    $("#warDate").innerHTML = `≈ <b>${m} months</b> · debt-free by <b>${dateAfter(m)}</b>`;
+  }else{
+    $("#warDays").textContent = "∞";
+    $("#warDate").innerHTML = `revenue below break-even — <b>get to ${rand(BREAKEVEN)}/mo first</b>`;
+  }
+  const withPipe = monthsToFreedom(mrr + PIPELINE_MRR);
+  $("#warPipe").textContent = PIPELINE_MRR>0
+    ? `+ pipeline (≈${rand(PIPELINE_MRR)}/mo weighted) → ${isFinite(withPipe)?withPipe+" months":"—"}`
+    : "";
+  const scen = [5000,25000,50000].map(r=>{
+    const mm = monthsToFreedom(r);
+    return `<div class="s"><div class="r">${randk(r)}/mo</div><div class="m grn">${isFinite(mm)?mm:"∞"}</div><div class="u">months</div></div>`;
+  }).join("");
+  $("#scen").innerHTML = scen;
+  $("#warNote").innerHTML = `Avalanche payoff of ${rand(TOTAL_DEBT)} across 7 accounts (highest APR first). `
+    + `Model: income ${rand(MONTHLY_INCOME)} − burn ${rand(MONTHLY_BURN)} = ${rand(BASE_TO_DEBT)}/mo attacks debt before any client revenue; `
+    + `every Rand of MRR adds on top. Interest accrues monthly per account APR.`;
+}
+
+/* ── boot ── */
+function boot(){
+  $("#genStamp").textContent = "gen " + (FALLBACK_PIPELINE.generated||"");
+  renderDebt();
+  $("#mrr").value = localStorage.getItem("mc_mrr") || "";
+  renderRevenue();
+  renderWhatif();
+  fetch("./pipeline.json",{cache:"no-store"})
+    .then(r=>r.ok?r.json():Promise.reject())
+    .then(d=>{ $("#genStamp").textContent="gen "+(d.generated||""); renderPipeline(d); })
+    .catch(()=>renderPipeline(FALLBACK_PIPELINE));
+}
+</script>
+</body>
+</html>
