@@ -67,8 +67,8 @@
   /* Text — WCAG AA verified */
   --txt:#f4f5f9;
   --txt-2:#c6cad6;
-  --txt-3:#949aac;
-  --txt-4:#6b7286;
+  --txt-3:#9aa0b2;
+  --txt-4:#838ba1;   /* bumped for WCAG AA on small text (≥4.5:1 on --bg) */
 
   /* Type */
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
@@ -1004,6 +1004,146 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .ld-cancel{background:none;border:none;color:var(--txt-4);font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;padding:10px;transition:color var(--t-fast)}
 .ld-cancel:hover{color:var(--txt-2)}
 @media(max-width:520px){.dnav{display:none}.lead-drawer-body{padding:var(--s4) var(--s5)}}
+
+/* ════════════════════════════════════════════════════════════
+   PROMPT 9 · CHATBOT  +  PROMPT 10 · POLISH PASS
+   ════════════════════════════════════════════════════════════ */
+
+/* ════════════════ POLISH · TOAST TYPES (⑩) ════════════════ */
+.toast{display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);line-height:1.4}
+.toast .ti{font-size:15px;line-height:1;flex:0 0 auto}
+.toast .tt{min-width:0}
+.toast.ok{border-color:var(--border-glow)}
+.toast.ok .ti{color:var(--green-bright)}
+.toast.info{border-color:rgba(86,179,247,.42)}
+.toast.info .ti{color:var(--blue)}
+.toast.err{border-color:var(--red-d)}
+.toast.err .ti{color:var(--red)}
+
+/* ════════════════ POLISH · LOADING SKELETONS (⑩) ════════════════ */
+.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.05);border-radius:var(--r-sm)}
+.skel::after{content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+  animation:skelShimmer 1.5s ease-in-out infinite}
+@keyframes skelShimmer{100%{transform:translateX(100%)}}
+.skel-line{height:11px;border-radius:6px}
+.skel-stage{height:130px;border-radius:var(--r-md)}
+.skel-feed-row{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;border-top:1px solid var(--border)}
+.skel-feed-row:first-child{border-top:none}
+.skel-feed-row .skel-dot{width:34px;height:34px;border-radius:var(--r-full);flex:0 0 auto}
+.skel-feed-row .skel-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+@media(prefers-reduced-motion:reduce){.skel::after{animation:none}}
+
+/* ════════════════ POLISH · EMPTY STATES (⑩) ════════════════ */
+.empty-state{text-align:center;padding:var(--s8) var(--s4)}
+.empty-state .es-ic{font-size:30px;display:block;margin-bottom:var(--s3);opacity:.9;filter:drop-shadow(0 0 12px var(--green-glow))}
+.empty-state .es-title{font-size:13px;font-weight:700;color:var(--txt-2)}
+.empty-state .es-sub{font-size:11.5px;color:var(--txt-4);margin-top:5px;font-family:var(--mono);line-height:1.6}
+
+/* ════════════════ POLISH · EXTRA HOVER STATES (⑩) ════════════════ */
+.feed-item,.account-item{border-radius:var(--r-sm);transition:background var(--t-fast)}
+.feed-item:hover,.account-item:hover:not(.is-target){background:var(--glass)}
+.crm-badge,.ea-badge{transition:filter var(--t-fast),transform var(--t-fast)}
+.crm-badge:hover,.ea-badge:hover{filter:brightness(1.12)}
+.dnav a:focus-visible,.lead-row:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+@media(hover:none){.feed-item:hover,.account-item:hover:not(.is-target){background:transparent}}
+
+/* ════════════════ POLISH · LIVE-DOT PING (⑩) ════════════════ */
+.status .dot{position:relative}
+.status .dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+  border:1.5px solid var(--green);opacity:.7;animation:dotPing 2.4s cubic-bezier(.16,1,.3,1) infinite}
+.status .dot.stale::after{border-color:var(--amber)}
+.status .dot.err::after{border-color:var(--red)}
+@keyframes dotPing{0%{transform:scale(.55);opacity:.75}80%,100%{transform:scale(1.9);opacity:0}}
+@media(prefers-reduced-motion:reduce){.status .dot::after{display:none;animation:none}}
+
+/* ════════════════ CHATBOT · FLOATING BUTTON (⑨) ════════════════ */
+.chat-fab{
+  position:fixed;right:22px;bottom:22px;z-index:150;
+  width:58px;height:58px;border-radius:var(--r-full);border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 12px 32px rgba(0,0,0,.42),0 0 0 1px rgba(34,197,94,.4),var(--sh-glow);
+  transition:transform var(--t-base),box-shadow var(--t-base),filter var(--t-base);
+  -webkit-tap-highlight-color:transparent;
+}
+.chat-fab:hover{transform:translateY(-3px) scale(1.05);filter:brightness(1.08)}
+.chat-fab:active{transform:translateY(0) scale(.95)}
+.chat-fab svg{position:absolute;width:26px;height:26px;display:block;transition:opacity var(--t-fast),transform var(--t-fast)}
+.chat-fab .cf-close{opacity:0;transform:rotate(-90deg) scale(.55)}
+.chat-fab.open .cf-open{opacity:0;transform:rotate(90deg) scale(.55)}
+.chat-fab.open .cf-close{opacity:1;transform:rotate(0) scale(1)}
+.chat-fab .cf-badge{position:absolute;top:0;right:0;width:13px;height:13px;border-radius:50%;background:var(--red);border:2.5px solid var(--bg-2);display:none}
+.chat-fab.has-unread .cf-badge{display:block;animation:fabBadge .4s var(--t-spring)}
+@keyframes fabBadge{from{transform:scale(0)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.chat-fab:hover{transform:none}.chat-fab.has-unread .cf-badge{animation:none}}
+@media(max-width:520px){.chat-fab{right:16px;bottom:16px;width:52px;height:52px}.chat-fab svg{width:24px;height:24px}}
+
+/* ════════════════ CHATBOT · PANEL (⑨) ════════════════ */
+.chat-panel{
+  position:fixed;right:22px;bottom:92px;z-index:160;
+  width:350px;max-width:calc(100vw - 32px);
+  height:500px;max-height:calc(100vh - 132px);
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--surface-2);
+  backdrop-filter:blur(26px) saturate(1.3);-webkit-backdrop-filter:blur(26px) saturate(1.3);
+  border:1px solid var(--border-2);border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg);
+  opacity:0;transform:translateY(26px) scale(.96);transform-origin:bottom right;
+  pointer-events:none;
+  transition:opacity var(--t-base),transform var(--t-spring);
+}
+.chat-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.chat-panel::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;z-index:2;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)}
+@media(max-width:520px){.chat-panel{right:14px;left:14px;bottom:82px;width:auto;max-height:calc(100vh - 112px)}}
+
+.chat-head{display:flex;align-items:center;gap:var(--s3);padding:var(--s4) var(--s5);border-bottom:1px solid var(--border);flex:0 0 auto}
+.chat-head-id{display:flex;align-items:center;gap:var(--s3);flex:1;min-width:0}
+.chat-avatar{width:36px;height:36px;flex:0 0 auto;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--green-subtle);border:1px solid var(--border-glow)}
+.chat-title{font-size:13px;font-weight:800;letter-spacing:-.01em}
+.chat-status{font-size:10.5px;color:var(--txt-3);font-family:var(--mono);display:flex;align-items:center;gap:6px;margin-top:2px}
+.chat-status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:0 0 auto;animation:pulse 2.4s ease-in-out infinite}
+.chat-clear{flex:0 0 auto;width:30px;height:30px;border-radius:var(--r-full);border:1px solid var(--border);background:var(--glass-2);color:var(--txt-3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t-fast),color var(--t-fast),border-color var(--t-fast)}
+.chat-clear:hover{background:var(--red-subtle);color:var(--red);border-color:var(--red-d)}
+
+.chat-log{flex:1;overflow-y:auto;overflow-x:hidden;padding:var(--s4) var(--s5);display:flex;flex-direction:column;gap:var(--s3);scrollbar-width:thin;scrollbar-color:var(--border-2) transparent}
+.chat-log::-webkit-scrollbar{width:6px}
+.chat-log::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
+.chat-msg{display:flex;gap:8px;max-width:90%;animation:chatIn .34s var(--t-spring)}
+@keyframes chatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user{align-self:flex-end;flex-direction:row-reverse}
+.chat-mini-ic{width:24px;height:24px;flex:0 0 auto;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--green-subtle);border:1px solid var(--border-glow);align-self:flex-end}
+.chat-bubble{padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere}
+.chat-msg.bot .chat-bubble{background:var(--surface-3);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--txt)}
+.chat-msg.user .chat-bubble{background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;border-bottom-right-radius:4px;font-weight:600}
+.chat-bubble b{font-weight:800}
+.chat-bubble .grn{color:var(--green-bright)}
+.chat-bubble .red{color:var(--red)}
+.chat-msg.user .chat-bubble .grn,.chat-msg.user .chat-bubble .red{color:#05140a}
+.chat-bubble .cb-list{margin:7px 0 1px;padding:0;list-style:none;font-family:var(--mono);font-size:11.5px}
+.chat-bubble .cb-list li{display:flex;justify-content:space-between;gap:12px;padding:2.5px 0;color:var(--txt-2);border-top:1px solid var(--border)}
+.chat-bubble .cb-list li:first-child{border-top:none}
+.chat-bubble .cb-list li span:last-child{font-weight:700;white-space:nowrap;color:var(--txt)}
+
+.chat-typing{display:flex;gap:4px;padding:3px 2px}
+.chat-typing i{width:6px;height:6px;border-radius:50%;background:var(--txt-3);animation:typingBlink 1.2s infinite ease-in-out}
+.chat-typing i:nth-child(2){animation-delay:.18s}
+.chat-typing i:nth-child(3){animation-delay:.36s}
+@keyframes typingBlink{0%,80%,100%{opacity:.28;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+.chat-suggest{display:flex;gap:7px;padding:var(--s2) var(--s5) var(--s3);flex-wrap:wrap;flex:0 0 auto}
+.chat-chip{font-size:11px;font-weight:600;color:var(--txt-2);background:var(--glass-2);border:1px solid var(--border);padding:6px 12px;border-radius:var(--r-full);cursor:pointer;white-space:nowrap;transition:background var(--t-fast),border-color var(--t-fast),color var(--t-fast),transform var(--t-fast);-webkit-tap-highlight-color:transparent}
+.chat-chip:hover{background:var(--green-subtle);border-color:var(--border-glow);color:var(--txt)}
+.chat-chip:active{transform:scale(.95)}
+
+.chat-input{display:flex;align-items:center;gap:var(--s2);padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));flex:0 0 auto;border-top:1px solid var(--border)}
+.chat-input input{flex:1;min-width:0;min-height:42px;background:rgba(255,255,255,.03);border:1.5px solid var(--border);color:var(--txt);font-family:var(--sans);font-size:13.5px;padding:10px 14px;border-radius:var(--r-full);outline:none;transition:border-color var(--t-fast),box-shadow var(--t-fast),background var(--t-fast)}
+.chat-input input::placeholder{color:var(--txt-4)}
+.chat-input input:focus{border-color:var(--green);background:rgba(34,197,94,.05);box-shadow:0 0 0 3px var(--green-glow)}
+.chat-send{flex:0 0 auto;width:42px;height:42px;border-radius:var(--r-full);border:none;cursor:pointer;background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;font-size:14px;display:flex;align-items:center;justify-content:center;transition:transform var(--t-fast),box-shadow var(--t-fast),filter var(--t-fast);-webkit-tap-highlight-color:transparent}
+.chat-send:hover{transform:scale(1.07);box-shadow:var(--sh-glow);filter:brightness(1.08)}
+.chat-send:active{transform:scale(.9)}
 </style>
 </head>
 <body>
@@ -1678,6 +1818,41 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
       Live data from <code>Supabase</code> · cached in this session · MRR synced to <code>revenue_log</code>. Change passcode: see <code>README.md</code>.
     </footer>
   </div>
+
+  <!-- ═══ CHATBOT (⑨ · talk to your data) ═══ -->
+  <button id="chatFab" class="chat-fab" type="button" aria-label="Open data assistant" aria-expanded="false" aria-controls="chatPanel">
+    <svg class="cf-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z"/>
+      <path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/>
+    </svg>
+    <svg class="cf-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </svg>
+    <span class="cf-badge" aria-hidden="true"></span>
+  </button>
+  <section id="chatPanel" class="chat-panel" role="dialog" aria-label="Mission Control data assistant" aria-hidden="true">
+    <div class="chat-head">
+      <div class="chat-head-id">
+        <span class="chat-avatar" aria-hidden="true">🤖</span>
+        <div>
+          <div class="chat-title">Mission Control AI</div>
+          <div class="chat-status"><span class="chat-status-dot" aria-hidden="true"></span> Talk to your data</div>
+        </div>
+      </div>
+      <button id="chatClear" class="chat-clear" type="button" title="Clear conversation" aria-label="Clear conversation">🗑</button>
+    </div>
+    <div class="chat-log" id="chatLog" role="log" aria-live="polite" aria-label="Conversation"></div>
+    <div class="chat-suggest" id="chatSuggest" aria-label="Suggested questions">
+      <button class="chat-chip" type="button" data-q="How many leads do I have?">How many leads?</button>
+      <button class="chat-chip" type="button" data-q="What's my debt?">What's my debt?</button>
+      <button class="chat-chip" type="button" data-q="What's my pipeline status?">Pipeline status?</button>
+    </div>
+    <form class="chat-input" id="chatForm" autocomplete="off">
+      <input id="chatText" type="text" placeholder="Ask about leads, debt, MRR…" aria-label="Type your question" maxlength="200">
+      <button class="chat-send" type="submit" aria-label="Send message">➤</button>
+    </form>
+  </section>
+
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1819,10 +1994,23 @@ function animateCount(el, target, formatter, duration=1400){
   };
   requestAnimationFrame(step);
 }
-function toast(msg){
+function toast(msg, type){
   const t=$("#toast"); if(!t) return;
-  t.textContent=msg; t.classList.add("show");
-  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200);
+  // Auto-classify when the caller doesn't pass a type, so every existing
+  // toast() call gets a sensible icon/colour without being edited.
+  if(!type){
+    if(/couldn['’]t|can['’]t|failed|error|too large|no cloud|copy failed|pick an image|never|offline/i.test(msg)) type="err";
+    else if(/refreshing|loading|saved on device|cleared|updating/i.test(msg)) type="info";
+    else type="ok";
+  }
+  const icons={ok:"✓",info:"ℹ",err:"⚠"};
+  t.className="toast "+type;
+  t.innerHTML='<span class="ti" aria-hidden="true"></span><span class="tt"></span>';
+  t.querySelector(".ti").textContent=icons[type]||"✓";
+  t.querySelector(".tt").textContent=msg;
+  void t.offsetWidth;                 // restart the slide-in if a toast is already up
+  t.classList.add("show");
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), 2600);
 }
 
 /* ════════════════ SCROLL PROGRESS ════════════════ */
@@ -2173,7 +2361,7 @@ function renderActivity(){
   const feed=$("#activityFeed");
   if(!feed) return;
   $("#activityCount").textContent=items.length+" event"+(items.length===1?"":"s");
-  if(!items.length){ feed.innerHTML=`<div class="feed-empty">No activity logged yet.</div>`; return; }
+  if(!items.length){ feed.innerHTML=`<div class="empty-state"><span class="es-ic" aria-hidden="true">🗒️</span><div class="es-title">No activity yet</div><div class="es-sub">Status changes & won deals show up here.</div></div>`; return; }
   feed.innerHTML=items.slice(0,8).map(a=>`
     <div class="feed-item">
       <div class="feed-ic ${a.cls}">${a.icon}</div>
@@ -2204,7 +2392,7 @@ function renderDebt(){
   animateCount($("#stripRunway"), RUNWAY_MONTHS, v=>Math.round(v*10)/10+" mo", 1000);
   const subEl=$("#stripDebtSub"); if(subEl) subEl.textContent=DEBT_ACCOUNTS.length+" accounts";
 
-  if(!DEBT_ACCOUNTS.length){ $("#accounts").innerHTML='<div class="feed-empty">No debt accounts loaded.</div>'; return; }
+  if(!DEBT_ACCOUNTS.length){ $("#accounts").innerHTML='<div class="empty-state"><span class="es-ic" aria-hidden="true">💳</span><div class="es-title">No debt accounts loaded</div><div class="es-sub">Add rows to the debt_accounts table.</div></div>'; return; }
   const sorted=[...DEBT_ACCOUNTS].sort((a,b)=> (b.apr-a.apr)||(a.balance-b.balance));
   const tl=document.querySelector("#debt .target-label"); if(tl) tl.textContent="→ next: "+sorted[0].name;
   const max=Math.max(...sorted.map(a=>a.balance));
@@ -3321,26 +3509,38 @@ function applyData(){
   ANIM_ON = false;            // entrance count-up done; background refreshes update silently
 }
 
+// "Last refreshed" indicator. Remembers when data was last fetched and shows it
+// as a live, self-updating relative stamp ("live · 2m ago") with the exact
+// timestamp on hover.
+let LAST_REFRESH=null, LAST_KIND="cached";
+function renderStamp(){
+  const stamp=$("#liveStamp"); if(!stamp) return;
+  if((LAST_KIND==="live"||LAST_KIND==="cached") && LAST_REFRESH){
+    const lead = LAST_KIND==="live" ? "live" : "cached";
+    stamp.textContent = LAST_REFRESH ? `${lead} · ${relTime(LAST_REFRESH)}` : `${lead}…`;
+    if(LAST_REFRESH) stamp.title = "Last refreshed "+LAST_REFRESH.toLocaleString("en-ZA");
+  }
+}
 function setStamp(kind){
   const dot=$("#statusDot"), stamp=$("#liveStamp");
   if(!stamp) return;
   if(dot) dot.classList.remove("stale","err");
   stamp.classList.remove("stale","err");
-  const t=new Date().toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"});
-  if(kind==="live"){ stamp.textContent="live · "+t; }
-  else if(kind==="cached"){ stamp.textContent="cached · "+t; }
-  else if(kind==="stale"){ stamp.textContent="offline · cached"; if(dot) dot.classList.add("stale"); stamp.classList.add("stale"); }
-  else { stamp.textContent="offline"; if(dot) dot.classList.add("err"); stamp.classList.add("err"); }
+  LAST_KIND=kind;
+  if(kind==="live"||kind==="cached"){ LAST_REFRESH=new Date(); renderStamp(); }
+  else if(kind==="stale"){ stamp.textContent="offline · cached"; stamp.title="Couldn't reach the database — showing last cached data"; if(dot) dot.classList.add("stale"); stamp.classList.add("stale"); }
+  else { stamp.textContent="offline"; stamp.title="No connection to the database"; if(dot) dot.classList.add("err"); stamp.classList.add("err"); }
 }
 function showCacheFlag(on){ const f=$("#cacheFlag"); if(f) f.classList.toggle("show", !!on); }
 function setRefreshing(on){ const b=$("#refreshBtn"); if(b) b.classList.toggle("spin", !!on); }
 function initRefresh(){
   const b=$("#refreshBtn");
-  if(b) b.addEventListener("click", ()=>{ if(!b.classList.contains("spin")){ toast("Refreshing…"); refreshData(); } });
+  if(b) b.addEventListener("click", ()=>{ if(!b.classList.contains("spin")) refreshData(true); });
 }
 
-async function refreshData(){
+async function refreshData(manual){
   setRefreshing(true);
+  if(manual) toast("Refreshing data…","info");
   try{
     const data=await fetchAll();
     const before=JSON.stringify({debt:STATE.debt,companies:STATE.companies,revenue:STATE.revenue,activity:STATE.activity,finance:STATE.finance,clients:STATE.clients});
@@ -3348,11 +3548,218 @@ async function refreshData(){
     writeCache(STATE);
     if(before!==JSON.stringify(data) || !hasRenderedOnce) applyData();
     setStamp("live"); showCacheFlag(false);
+    if(manual) toast("Data refreshed ✓","ok");
   }catch(e){
     console.warn("Live refresh failed", e);
-    if(hasData()){ setStamp("stale"); showCacheFlag(true); }
-    else { setStamp("err"); const fc=$("#funnelContainer"); if(fc) fc.innerHTML='<div class="feed-empty">Couldn’t reach the database. Check your connection, then tap refresh ⟳.</div>'; }
+    if(hasData()){ setStamp("stale"); showCacheFlag(true); if(manual) toast("Offline · showing cached data","err"); }
+    else {
+      setStamp("err");
+      clearSkeletons("Couldn’t reach the database. Check your connection, then tap refresh ⟳.");
+      if(manual) toast("Couldn't reach the database","err");
+    }
   }finally{ setRefreshing(false); }
+}
+
+/* ════════════════ LOADING SKELETONS (⑩) ════════════════ */
+// Painted only on a cold start (no session cache) while the first Supabase fetch
+// is in flight. applyData() overwrites these containers with real content.
+function showSkeletons(){
+  const rep=(n)=>Array.from({length:n});
+  const fc=$("#funnelContainer");
+  if(fc) fc.innerHTML=`<div class="funnel">${rep(6).map(()=>`<div class="skel skel-stage"></div>`).join("")}</div>`;
+  const acc=$("#accounts");
+  if(acc) acc.innerHTML=rep(5).map(()=>`<div class="skel-feed-row"><div class="skel-body"><div class="skel skel-line" style="width:62%"></div><div class="skel skel-line" style="width:34%"></div></div><div class="skel skel-line" style="width:54px;flex:0 0 auto"></div></div>`).join("");
+  const feed=$("#activityFeed");
+  if(feed) feed.innerHTML=rep(4).map(()=>`<div class="skel-feed-row"><div class="skel skel-dot"></div><div class="skel-body"><div class="skel skel-line" style="width:72%"></div><div class="skel skel-line" style="width:46%"></div></div></div>`).join("");
+  const ct=$("#crTable");
+  if(ct) ct.innerHTML=rep(3).map(()=>`<div class="skel skel-line" style="height:48px;margin:10px 0;border-radius:var(--r-md)"></div>`).join("");
+}
+// On a hard failure with no data at all, swap skeletons for honest empty/error notes.
+function clearSkeletons(msg){
+  const fc=$("#funnelContainer");
+  if(fc) fc.innerHTML=`<div class="empty-state"><span class="es-ic" aria-hidden="true">📡</span><div class="es-title">Couldn't reach the database</div><div class="es-sub">${esc(msg||"Check your connection, then tap refresh ⟳.")}</div></div>`;
+  const acc=$("#accounts"); if(acc && acc.querySelector(".skel")) acc.innerHTML=`<div class="empty-state"><span class="es-ic" aria-hidden="true">💳</span><div class="es-title">No data</div></div>`;
+  const feed=$("#activityFeed"); if(feed && feed.querySelector(".skel")) feed.innerHTML=`<div class="empty-state"><span class="es-ic" aria-hidden="true">🗒️</span><div class="es-title">No data</div></div>`;
+  const ct=$("#crTable"); if(ct && ct.querySelector(".skel")) ct.innerHTML="";
+}
+
+/* ════════════════════════════════════════════════════════════
+   CHATBOT (⑨ · rule-based — talk to your data, no API key)
+   ════════════════════════════════════════════════════════════ */
+const CHAT_KEY="mc_chat_history_v1";
+let CHAT_HISTORY=[];
+
+function chatLoad(){ try{ CHAT_HISTORY=JSON.parse(localStorage.getItem(CHAT_KEY))||[]; }catch(_){ CHAT_HISTORY=[]; } }
+function chatSave(){ try{ localStorage.setItem(CHAT_KEY, JSON.stringify(CHAT_HISTORY.slice(-60))); }catch(_){ } }
+function chatScroll(){ const l=$("#chatLog"); if(l) l.scrollTop=l.scrollHeight; }
+
+const CHAT_GREETING=`Hi! I'm your Mission Control assistant 🤖 Ask me about your <b class="grn">leads</b>, <b class="grn">debt</b>, <b class="grn">pipeline</b>, <b class="grn">MRR</b>, <b class="grn">clients</b>, <b class="grn">activity</b>, or <b class="grn">websites</b>.`;
+function chatRender(){
+  const log=$("#chatLog"); if(!log) return;
+  let html = `<div class="chat-msg bot"><span class="chat-mini-ic" aria-hidden="true">🤖</span><div class="chat-bubble">${CHAT_GREETING}</div></div>`;
+  html += CHAT_HISTORY.map(m=> m.role==="user"
+    ? `<div class="chat-msg user"><div class="chat-bubble">${esc(m.text)}</div></div>`
+    : `<div class="chat-msg bot"><span class="chat-mini-ic" aria-hidden="true">🤖</span><div class="chat-bubble">${m.html}</div></div>`
+  ).join("");
+  log.innerHTML=html;
+  chatScroll();
+}
+function chatPush(role, payload){
+  CHAT_HISTORY.push(role==="user"?{role,text:payload}:{role,html:payload});
+  chatSave(); chatRender();
+}
+function chatTyping(on){
+  const log=$("#chatLog"); if(!log) return;
+  let t=document.getElementById("chatTyping");
+  if(on){
+    if(t) return;
+    const d=document.createElement("div"); d.className="chat-msg bot"; d.id="chatTyping";
+    d.innerHTML=`<span class="chat-mini-ic" aria-hidden="true">🤖</span><div class="chat-bubble"><div class="chat-typing"><i></i><i></i><i></i></div></div>`;
+    log.appendChild(d); chatScroll();
+  }else if(t){ t.remove(); }
+}
+
+const cbN = v => `<b class="grn">${v}</b>`;
+function chatDetectNiche(q){
+  const map={ "pest":"pest control","plumb":"plumbers","electric":"electricians","roof":"roofers","garden":"gardeners" };
+  for(const k in map){ if(q.includes(k)) return map[k]; }
+  return null;
+}
+
+// The rule engine. Returns an HTML string (numbers from live STATE; any
+// user-derived strings are esc()'d). Order matters — most specific first.
+function chatAnswer(qRaw){
+  const q=String(qRaw||"").toLowerCase().trim();
+  if(!q) return "Ask me about your leads, debt, pipeline, MRR, clients, activity, or websites.";
+  if(/^(hi|hey|hello|yo|sup|howzit|hiya)\b/.test(q)) return `Hey 👋 Try <b>“how many leads do I have?”</b>, <b>“what's my debt?”</b>, or <b>“how long to debt freedom?”</b>.`;
+  if(q.includes("help")||q.includes("what can you")||q.includes("what do you")) return `I can answer questions about: <b class="grn">leads</b> (total or by niche), <b class="grn">debt</b>, <b class="grn">pipeline status</b>, <b class="grn">MRR</b>, <b class="grn">clients</b>, <b class="grn">recent activity</b>, <b class="grn">website status</b>, and <b class="grn">time to debt freedom</b>.`;
+  if(/(thank|thanks|cheers|ta\b)/.test(q)) return "Anytime 🫡 Ask me anything else about your numbers.";
+
+  const niche=chatDetectNiche(q);
+
+  // 1) TIME TO DEBT FREEDOM
+  const wantsTime = q.includes("how long")||q.includes("when will")||q.includes("how many months")||q.includes("time to")||q.includes("payoff")||q.includes("pay off");
+  const aboutFreedom = q.includes("debt freedom")||q.includes("debt-free")||q.includes("debt free")||(q.includes("free")&&q.includes("debt"));
+  if(aboutFreedom || (wantsTime && (q.includes("debt")||q.includes("free")))){
+    const mrr=+($("#mrr").value)||0;
+    const m=monthsToFreedom(mrr);
+    if(!isFinite(m)) return `At your current MRR of ${cbN(rand(mrr))} you're below break-even, so the debt never clears. Get to ${cbN(rand(BREAKEVEN))}/mo first — then I can give you a date.`;
+    const yrs=Math.floor(m/12), mo=m%12, span=yrs?`${yrs}y ${mo}m`:`${m} months`;
+    return `Using the <b>avalanche method</b> (highest-APR first), you'll be ${cbN("debt-free in "+m+" months")} (${span}) — around <b>${dateAfter(m)}</b>. That clears ${cbN(rand(TOTAL_DEBT))} of debt with ${rand(BASE_TO_DEBT)}/mo base + ${rand(mrr)} MRR on top.`;
+  }
+
+  // 2) DEBT TOTAL
+  if(q.includes("debt")||q.includes("owe")){
+    if(!DEBT_ACCOUNTS.length) return "I don't see any debt accounts loaded yet.";
+    const byApr=[...DEBT_ACCOUNTS].sort((a,b)=>(b.apr-a.apr)||(a.balance-b.balance));
+    const top=byApr[0];
+    const list=[...DEBT_ACCOUNTS].sort((a,b)=>b.balance-a.balance).slice(0,4)
+      .map(a=>`<li><span>${esc(a.name)}</span><span>${rand(a.balance)}</span></li>`).join("");
+    return `Your total debt is ${cbN(rand(TOTAL_DEBT))} across <b>${DEBT_ACCOUNTS.length} accounts</b>, with ${rand(MIN_PAYMENTS)}/mo in minimums. Next target (highest APR): <b class="grn">${esc(top.name)}</b> @ ${top.apr.toFixed(1)}%.<ul class="cb-list">${list}</ul>`;
+  }
+
+  // 3) PIPELINE STATUS  (before "site"/"status" so "pipeline status" lands here)
+  if(q.includes("pipeline")||q.includes("funnel")||q.includes("stage")){
+    const cos=allCompanies();
+    const counts={}; STAGES.forEach(s=>counts[s.key]=0);
+    cos.forEach(c=>{ if(counts[c.outreach_status]!=null) counts[c.outreach_status]++; });
+    const list=STAGES.map(s=>`<li><span>${s.label}</span><span class="grn">${counts[s.key]}</span></li>`).join("");
+    const contacted=cos.filter(c=>c.outreach_status!=="not_contacted").length;
+    const responded=counts.replied+counts.won;
+    return `Pipeline across <b>${cos.length} leads</b> — ${cbN(contacted)} contacted, ${cbN(responded)} responded:<ul class="cb-list">${list}</ul>`;
+  }
+
+  // 4) MRR / REVENUE
+  if(q.includes("mrr")||q.includes("revenue")||q.includes("recurring")||q.includes("earning")||q.includes("making")){
+    const mrr=crPaidMRR()||(+($("#mrr").value)||0);
+    const pct=FREEDOM_MRR?Math.round(mrr/FREEDOM_MRR*100):0;
+    const gap=Math.max(0,FREEDOM_MRR-mrr);
+    const tail = mrr>=BREAKEVEN ? `You're ${cbN("above break-even")} by ${rand(mrr-BREAKEVEN)}.` : `Break-even is ${rand(BREAKEVEN)}/mo.`;
+    return `Your MRR is ${cbN(rand(mrr)+"/mo")} — that's <b>${pct}%</b> of your ${rand(FREEDOM_MRR)} freedom target${gap?`, ${rand(gap)} to go. `:` — reached ✓. `}${tail}`;
+  }
+
+  // 5) CLIENTS
+  if(q.includes("client")||q.includes("customer")){
+    const cs=STATE.clients||[];
+    if(!cs.length) return "You don't have any clients logged yet. When you close your first deal, add them in the Client Revenue panel.";
+    const active=cs.filter(c=>c.payment_status!=="cancelled");
+    const paid=cs.filter(c=>c.payment_status==="paid").length;
+    return `You have ${cbN(active.length+" active client"+(active.length===1?"":"s"))} (${paid} paid), generating ${cbN(rand(crPaidMRR())+"/mo")} in paid MRR.`;
+  }
+
+  // 6) WEBSITE STATUS  ("update" deliberately excluded — that's an activity query)
+  if(q.includes("website")||q.includes("site")||q.includes("online")||q.includes("uptime")){
+    const groups=ssBuildGroups();
+    const urls=new Set(); groups.forEach(g=>g.sites.forEach(s=>urls.add(s.url)));
+    const c=ssReadCache(), results=c.results||{};
+    let up=0,down=0,checked=0;
+    urls.forEach(u=>{ const r=results[u]; if(r){ checked++; r.status==="up"?up++:down++; } });
+    if(!checked) return `I haven't pinged your <b>${urls.size}</b> sites yet this session. Open the <b>Site Status</b> panel and hit ${cbN("Check All")} for live results.`;
+    return `${cbN(up+" of "+urls.size)} sites are <b class="grn">live</b>${down?`, <b class="red">${down} down</b>`:` — all good ✓`}. Last checked ${c.checkedAt?relTime(new Date(c.checkedAt)):"recently"}.`;
+  }
+
+  // 7) RECENT ACTIVITY
+  if(q.includes("activity")||q.includes("recent")||q.includes("happening")||q.includes("latest")||q.includes("going on")||q.includes("update")){
+    const items=(STATE.activity||[]).slice(0,5);
+    if(!items.length) return "No activity logged yet. Status changes and won deals will show up here.";
+    const list=items.map(a=>{
+      const when=a.event_time?relTime(new Date(a.event_time)):"";
+      const who=a.company?` · ${esc(a.company)}`:"";
+      return `<li><span>${esc(humanizeAction(a.action))}${who}</span><span>${when}</span></li>`;
+    }).join("");
+    return `Here's your last <b>${items.length}</b> event${items.length===1?"":"s"}:<ul class="cb-list">${list}</ul>`;
+  }
+
+  // 8) LEADS — total, or filtered by niche
+  if(q.includes("lead")||niche){
+    if(niche){
+      const n=allCompanies().filter(c=>c.niche===niche).length;
+      return `You have ${cbN(n+" "+niche+" lead"+(n===1?"":"s"))} in your pipeline.`;
+    }
+    const total=(STATE.companies||[]).length;
+    const active=allCompanies().length;
+    return `You currently have ${cbN(total+" leads")} in your pipeline${active!==total?` (${active} active, ${total-active} closed-lost)`:``}.`;
+  }
+
+  // FALLBACK
+  return `I didn't understand that. Try asking about: <b class="grn">leads</b>, <b class="grn">debt</b>, <b class="grn">pipeline</b>, <b class="grn">MRR</b>, <b class="grn">clients</b>, <b class="grn">activity</b>, or <b class="grn">websites</b>.`;
+}
+
+function chatSend(text){
+  const q=String(text||"").trim(); if(!q) return;
+  chatPush("user", q);
+  const input=$("#chatText"); if(input) input.value="";
+  chatTyping(true);
+  const delay=reduceMotion()?120:(360+Math.random()*280);
+  setTimeout(()=>{
+    chatTyping(false);
+    let html; try{ html=chatAnswer(q); }catch(e){ console.warn("chat answer failed", e); html="Hmm, I hit a snag reading that data. Try a refresh ⟳ and ask again."; }
+    chatPush("bot", html);
+    const fab=$("#chatFab"), panel=$("#chatPanel");
+    if(fab && panel && !panel.classList.contains("open")) fab.classList.add("has-unread");
+  }, delay);
+}
+function chatOpen(){
+  const p=$("#chatPanel"), f=$("#chatFab"); if(!p) return;
+  p.classList.add("open"); p.setAttribute("aria-hidden","false");
+  if(f){ f.classList.add("open"); f.setAttribute("aria-expanded","true"); f.classList.remove("has-unread"); }
+  chatScroll();
+  setTimeout(()=>{ const i=$("#chatText"); if(i) i.focus(); }, reduceMotion()?0:150);
+}
+function chatClose(){
+  const p=$("#chatPanel"), f=$("#chatFab"); if(!p) return;
+  p.classList.remove("open"); p.setAttribute("aria-hidden","true");
+  if(f){ f.classList.remove("open"); f.setAttribute("aria-expanded","false"); f.focus(); }
+}
+function chatToggle(){ const p=$("#chatPanel"); (p && p.classList.contains("open")) ? chatClose() : chatOpen(); }
+function initChatbot(){
+  chatLoad(); chatRender();
+  const fab=$("#chatFab"), form=$("#chatForm"), clear=$("#chatClear"), suggest=$("#chatSuggest");
+  if(fab) fab.addEventListener("click", chatToggle);
+  if(form) form.addEventListener("submit",(e)=>{ e.preventDefault(); chatSend($("#chatText").value); });
+  if(clear) clear.addEventListener("click", ()=>{ CHAT_HISTORY=[]; chatSave(); chatRender(); toast("Chat cleared","info"); });
+  if(suggest) suggest.addEventListener("click",(e)=>{ const b=e.target.closest(".chat-chip"); if(b) chatSend(b.dataset.q); });
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ const p=$("#chatPanel"); if(p && p.classList.contains("open")) chatClose(); } });
 }
 
 /* ════════════════ BOOT ════════════════ */
@@ -3368,7 +3775,10 @@ function boot(){
   initAvatar();
   initViewNav();
   initLeads();
+  initChatbot();
   loadOutreachPack();
+  // keep the "last refreshed" stamp relative time fresh
+  setInterval(renderStamp, 30000);
 
   // restore device-local state
   const savedMrr=localStorage.getItem("mc_mrr");
@@ -3392,7 +3802,7 @@ function boot(){
   // 1) paint cached data instantly, 2) fetch fresh from Supabase in the background
   const cached=readCache();
   if(cached){ Object.assign(STATE, cached); applyData(); setStamp("cached"); }
-  else { setStamp("cached"); $("#liveStamp").textContent="loading…"; }
+  else { showSkeletons(); LAST_KIND="cached"; const ls=$("#liveStamp"); if(ls){ ls.textContent="loading…"; ls.title="Fetching from Supabase…"; } }
 
   // restore last-used view (Dashboard / Leads)
   try{ if(localStorage.getItem("mc_view")==="leads") switchView("leads"); }catch(_){ }
