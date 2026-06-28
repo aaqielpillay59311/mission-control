@@ -3,10 +3,8 @@
   ════════════════════════════════════════════════════════════
   MISSION CONTROL · BUILD QUEUE (remaining prompts) — for Claude Code
   ════════════════════════════════════════════════════════════
-  DONE:  1 Scaffold/dashboard · 2 Supabase wiring · 3 Import 100 outreach companies · 4 Website Status panel · 5 Email/Cron/Telegram monitoring (Resend via /api proxy) · 6 Client Revenue tracking (clients table → ⑦ panel, MRR mirrors paid clients)
+  DONE:  1 Scaffold/dashboard · 2 Supabase wiring · 3 Import 100 outreach companies · 4 Website Status panel · 5 Email/Cron/Telegram monitoring (Resend via /api proxy) · 6 Client Revenue tracking (clients table → ⑦ panel, MRR mirrors paid clients) · 7 Avatar storage (avatars bucket, header upload, localStorage base64 cache) · 8 Lead Management view (Leads CRM: sortable table, filters, inline status → Supabase + activity_feed, slide-out editor)
   TODO:
-    - Prompt 7:  Add storage bucket for avatar
-    - Prompt 8:  Add lead management page
     - Prompt 9:  Add chatbot
     - Prompt 10: Polish pass
     - Prompt 11: Final deploy
@@ -809,6 +807,203 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
   .cr-cell .cr-cl{display:block;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-4);font-weight:700}
   .cr-cell.cr-status-cell{grid-column:1 / -1}
 }
+
+/* ════════════════ AVATAR (⑦ · Prompt 7) ════════════════ */
+.avatar-btn{
+  position:relative;width:34px;height:34px;flex:0 0 auto;
+  border-radius:var(--r-full);border:1.5px solid var(--border-2);
+  background:var(--glass-2);cursor:pointer;padding:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast);
+  -webkit-tap-highlight-color:transparent;
+}
+.avatar-btn:hover{border-color:var(--border-glow);box-shadow:0 0 0 3px var(--green-glow);transform:translateY(-1px)}
+.avatar-btn:active{transform:scale(.94)}
+.avatar-btn img{width:100%;height:100%;object-fit:cover;display:none}
+.avatar-btn .avatar-ph{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:15px;color:var(--txt-3);background:radial-gradient(circle at 50% 35%,var(--green-subtle),transparent 70%)}
+.avatar-btn .avatar-cam{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;background:rgba(6,7,12,.62);opacity:0;transition:opacity var(--t-fast);
+}
+.avatar-btn:hover .avatar-cam{opacity:1}
+.avatar-btn.uploading{pointer-events:none}
+.avatar-btn.uploading::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  border:2px solid rgba(34,197,94,.25);border-top-color:var(--green);
+  animation:spin .8s linear infinite;
+}
+
+/* ════════════════ VIEW NAV (Dashboard / Leads) ════════════════ */
+.viewnav{
+  display:inline-flex;gap:2px;flex:0 0 auto;
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--r-full);padding:3px;
+}
+.vn-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--sans);font-size:12px;font-weight:700;color:var(--txt-3);
+  background:none;border:none;padding:7px 15px;border-radius:var(--r-full);cursor:pointer;
+  transition:color var(--t-fast),background var(--t-fast),box-shadow var(--t-fast);
+  white-space:nowrap;-webkit-tap-highlight-color:transparent;
+}
+.vn-btn:hover{color:var(--txt)}
+.vn-btn.active{background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;box-shadow:0 2px 10px var(--green-glow)}
+.vn-btn .vn-ic{font-size:13px;line-height:1}
+@media(max-width:560px){.vn-btn{padding:7px 12px}.vn-btn .vn-lbl{font-size:11.5px}}
+
+/* ════════════════ LEADS VIEW (⑧ · CRM) ════════════════ */
+.leads-view{padding-top:var(--s8);animation:fadeUp .45s var(--t-spring)}
+.leads-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s4);flex-wrap:wrap;margin-bottom:var(--s6)}
+.leads-title h2{font-size:clamp(20px,4vw,28px);font-weight:800;letter-spacing:-.015em}
+.leads-title .lead-sub{color:var(--txt-4);font-size:12px;margin-top:var(--s1)}
+.leads-title .lead-sub code{font-family:var(--mono);color:var(--txt-3)}
+.lead-count{font-family:var(--mono);font-size:12px;color:var(--txt-3);background:var(--glass);border:1px solid var(--border);padding:8px 16px;border-radius:var(--r-full);white-space:nowrap;font-weight:600}
+.lead-count b{color:var(--green)}
+
+/* toolbar */
+.lead-toolbar{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center;margin-bottom:var(--s5)}
+.lead-search{position:relative;flex:1 1 240px;min-width:200px}
+.lead-search .ls-ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;opacity:.7}
+.lead-search input{
+  width:100%;min-height:46px;background:rgba(255,255,255,.03);
+  border:1.5px solid var(--border);color:var(--txt);
+  font-family:var(--sans);font-size:14px;padding:11px 14px 11px 40px;border-radius:var(--r-full);outline:none;
+  transition:border-color var(--t-fast),box-shadow var(--t-fast),background var(--t-fast);
+}
+.lead-search input::placeholder{color:var(--txt-4)}
+.lead-search input:focus{border-color:var(--green);background:rgba(34,197,94,.05);box-shadow:0 0 0 3px var(--green-glow)}
+.lead-search input::-webkit-search-cancel-button{filter:invert(.6)}
+.lead-select-wrap{position:relative;display:inline-flex;align-items:center;flex:0 0 auto}
+.lead-select{
+  appearance:none;-webkit-appearance:none;
+  background:var(--glass-2);border:1.5px solid var(--border);color:var(--txt);
+  font-family:var(--sans);font-size:12.5px;font-weight:600;
+  min-height:46px;padding:11px 38px 11px 16px;border-radius:var(--r-full);cursor:pointer;outline:none;
+  transition:border-color var(--t-fast),background var(--t-fast);
+}
+.lead-select:hover{border-color:var(--border-glow);background:var(--green-subtle)}
+.lead-select:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-glow)}
+.lead-select option{background:#0c0e16;color:var(--txt)}
+.lead-select-wrap::after{content:"▾";position:absolute;right:15px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--green);font-size:10px}
+
+/* table shell */
+.lead-table-wrap{
+  background:var(--surface);
+  backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);
+  border:1px solid var(--border);border-radius:var(--r-xl);
+  box-shadow:var(--sh-panel);overflow:hidden;position:relative;
+}
+.lead-table-wrap::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);z-index:2}
+#leadTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.lead-thead,.lead-row{
+  display:grid;
+  grid-template-columns:minmax(150px,1.7fr) 102px 102px minmax(150px,1.5fr) 92px 90px minmax(120px,1.25fr) 142px 96px 110px;
+  gap:var(--s3);align-items:center;min-width:1240px;
+}
+.lead-thead{padding:var(--s4) var(--s6);border-bottom:1px solid var(--border-2);background:var(--glass)}
+.lead-th{
+  display:flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;
+  color:var(--txt-4);font-family:var(--sans);font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  text-align:left;padding:0;transition:color var(--t-fast);white-space:nowrap;
+}
+.lead-th:hover{color:var(--txt-2)}
+.lead-th.active{color:var(--green)}
+.lead-th.num{justify-content:flex-end}
+.lead-sort{font-size:8px;width:8px;display:inline-block}
+.lead-row{padding:var(--s3) var(--s6);border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--t-fast)}
+.lead-row:last-child{border-bottom:none}
+.lead-row:hover{background:var(--glass)}
+.lead-row:focus-visible{background:var(--green-subtle);outline:none}
+@media(hover:none){.lead-row:hover{background:transparent}}
+.lead-cell{min-width:0;font-size:12.5px;color:var(--txt-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lead-cell.num{text-align:right;justify-self:end;font-family:var(--mono);font-weight:700;color:var(--txt)}
+.lead-company{font-weight:700;color:var(--txt);font-size:13px}
+.lead-niche{text-transform:capitalize;color:var(--txt-3)}
+.lead-mono{font-family:var(--mono);font-size:11.5px;color:var(--txt-3)}
+.lead-muted{color:var(--txt-4)}
+.lead-link{color:var(--blue);text-decoration:none;font-family:var(--mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;vertical-align:bottom}
+.lead-link:hover{text-decoration:underline}
+.lead-link.lead-demo{color:var(--green);font-weight:700}
+.lead-cl{display:none}
+
+/* inline status pill (also a <select>) */
+.lead-status{position:relative;display:inline-flex;align-items:center;max-width:100%}
+.lead-status select{
+  appearance:none;-webkit-appearance:none;max-width:100%;
+  font-family:var(--sans);font-size:9.5px;font-weight:800;letter-spacing:.02em;text-transform:capitalize;
+  padding:5px 22px 5px 11px;border-radius:var(--r-full);cursor:pointer;outline:none;
+  border:1px solid transparent;transition:filter var(--t-fast),box-shadow var(--t-fast);
+}
+.lead-status select:hover{filter:brightness(1.12)}
+.lead-status select:focus{box-shadow:0 0 0 3px var(--green-glow)}
+.lead-status select option{background:#0c0e16;color:var(--txt);font-weight:600}
+.lead-status::after{content:"▾";position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:8px;opacity:.75}
+.lead-status.ls-not select{background:rgba(255,255,255,.05);color:var(--txt-3);border-color:var(--border)}
+.lead-status.ls-contacted select{background:var(--blue-subtle);color:var(--blue);border-color:rgba(86,179,247,.3)}
+.lead-status.ls-followed select{background:var(--amber-subtle);color:var(--amber);border-color:rgba(251,191,36,.3)}
+.lead-status.ls-replied select{background:var(--green-subtle);color:var(--green-bright);border-color:var(--border-glow)}
+.lead-status.ls-won select{background:rgba(34,197,94,.2);color:var(--green-bright);border-color:var(--border-glow)}
+.lead-status.ls-lost select{background:var(--red-subtle);color:var(--red);border-color:var(--red-d)}
+
+.lead-empty{padding:var(--s12) var(--s5);text-align:center;color:var(--txt-4);font-family:var(--mono);font-size:12.5px}
+
+/* mobile: table → cards */
+@media(max-width:900px){
+  #leadTableWrap{overflow-x:visible}
+  .lead-table-wrap{background:none;border:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .lead-table-wrap::before{display:none}
+  .lead-thead{display:none}
+  .lead-row{
+    grid-template-columns:1fr 1fr;gap:var(--s3) var(--s4);min-width:0;
+    padding:var(--s5) var(--s4);background:var(--glass);border:1px solid var(--border);
+    border-radius:var(--r-md);margin-bottom:var(--s3);
+  }
+  .lead-row:last-child{border-bottom:1px solid var(--border)}
+  .lead-row:hover{background:var(--glass)}
+  .lead-cell{display:flex;flex-direction:column;gap:3px;white-space:normal;overflow:visible}
+  .lead-cell.num{text-align:left;justify-self:start;align-items:flex-start}
+  .lead-cell.lead-company-cell,.lead-cell.lead-email-cell,.lead-cell.lead-protocol-cell,.lead-cell.lead-status-cell{grid-column:1 / -1}
+  .lead-cl{display:block;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-4);font-weight:700}
+  .lead-link{font-size:12px}
+}
+
+/* slide-out detail drawer */
+.lead-backdrop{position:fixed;inset:0;z-index:150;background:rgba(6,7,12,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity var(--t-base)}
+.lead-backdrop.show{opacity:1;pointer-events:auto}
+.lead-drawer{
+  position:fixed;top:0;right:0;bottom:0;z-index:160;width:min(440px,93vw);
+  background:var(--surface-2);
+  backdrop-filter:blur(28px) saturate(1.25);-webkit-backdrop-filter:blur(28px) saturate(1.25);
+  border-left:1px solid var(--border-2);box-shadow:var(--sh-lg);
+  transform:translateX(100%);transition:transform var(--t-slow);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.lead-drawer.open{transform:translateX(0)}
+.lead-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);padding:var(--s6) var(--s6) var(--s4);border-bottom:1px solid var(--border)}
+.lead-drawer-head h3{font-size:16px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lead-drawer-close{flex:0 0 auto;width:32px;height:32px;border-radius:var(--r-full);border:1px solid var(--border);background:var(--glass-2);color:var(--txt-2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t-fast),color var(--t-fast)}
+.lead-drawer-close:hover{background:var(--surface-3);color:var(--txt)}
+.lead-drawer-body{flex:1;overflow-y:auto;padding:var(--s5) var(--s6);display:flex;flex-direction:column;gap:var(--s4)}
+.ld-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ld-field label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);font-weight:700}
+.ld-field input,.ld-field select{
+  width:100%;min-height:46px;background:rgba(255,255,255,.03);border:1.5px solid var(--border);color:var(--txt);
+  font-family:var(--sans);font-size:14px;padding:11px 13px;border-radius:var(--r-md);outline:none;
+  transition:border-color var(--t-fast),box-shadow var(--t-fast),background var(--t-fast);
+}
+.ld-field input:focus,.ld-field select:focus{border-color:var(--green);background:rgba(34,197,94,.05);box-shadow:0 0 0 3px var(--green-glow)}
+.ld-field select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2322c55e' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.ld-field select option{background:#0c0e16;color:var(--txt)}
+.ld-row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+.ld-open{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;color:var(--green);text-decoration:none;font-size:12.5px;font-weight:700;font-family:var(--sans);padding:8px 14px;border:1px solid var(--border-glow);background:var(--green-subtle);border-radius:var(--r-full);transition:background var(--t-fast)}
+.ld-open:hover{background:rgba(34,197,94,.16)}
+.lead-drawer-foot{display:flex;align-items:center;gap:var(--s3);padding:var(--s4) var(--s6) calc(var(--s6) + env(safe-area-inset-bottom));border-top:1px solid var(--border)}
+.ld-save{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;border:none;font-family:var(--sans);font-weight:800;font-size:13.5px;padding:13px 18px;border-radius:var(--r-md);cursor:pointer;min-height:48px;transition:transform var(--t-fast),box-shadow var(--t-fast),filter var(--t-fast)}
+.ld-save:hover{transform:translateY(-2px);box-shadow:var(--sh-glow);filter:brightness(1.08)}
+.ld-save:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none;filter:none}
+.ld-cancel{background:none;border:none;color:var(--txt-4);font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;padding:10px;transition:color var(--t-fast)}
+.ld-cancel:hover{color:var(--txt-2)}
+@media(max-width:520px){.dnav{display:none}.lead-drawer-body{padding:var(--s4) var(--s5)}}
 </style>
 </head>
 <body>
@@ -846,6 +1041,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
           <div class="sub">Debt Freedom OS · War Room</div>
         </div>
       </div>
+      <div class="viewnav" role="tablist" aria-label="Primary view">
+        <button class="vn-btn active" data-view="dashboard" role="tab" aria-selected="true" type="button"><span class="vn-ic" aria-hidden="true">▦</span><span class="vn-lbl">Dashboard</span></button>
+        <button class="vn-btn" data-view="leads" role="tab" aria-selected="false" type="button"><span class="vn-ic" aria-hidden="true">◎</span><span class="vn-lbl">Leads</span></button>
+      </div>
       <nav class="dnav" aria-label="Key decisions">
         <a href="#war"><span class="qn">01</span> Debt freedom</a>
         <a href="#pipelineSection"><span class="qn">02</span> Pipeline health</a>
@@ -862,6 +1061,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
             <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
           </svg>
         </button>
+        <button id="avatarBtn" class="avatar-btn" type="button" title="Upload profile picture" aria-label="Upload profile picture">
+          <img id="avatarImg" alt="Your avatar">
+          <span class="avatar-ph" id="avatarPh" aria-hidden="true">👤</span>
+          <span class="avatar-cam" aria-hidden="true">📷</span>
+        </button>
+        <input id="avatarInput" type="file" accept="image/*" hidden>
       </div>
     </div>
   </div>
@@ -872,6 +1077,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
       <span class="cf-dot" aria-hidden="true"></span>
       <span id="cacheFlagText">Showing cached data — couldn't reach the database. Tap refresh to retry.</span>
     </div>
+
+    <!-- ═══════════════════ DASHBOARD VIEW ═══════════════════ -->
+    <div id="dashboardView">
 
     <!-- ═══ DECISION 01 · THE WAR (HERO) ═══ -->
     <section class="section" id="war" style="padding-top:0" role="region" aria-label="Days to debt freedom">
@@ -1346,6 +1554,124 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
         </div>
       </div>
     </div>
+
+    </div><!-- /dashboardView -->
+
+    <!-- ═══════════════════ LEADS VIEW · CRM (⑧) ═══════════════════ -->
+    <div id="leadsView" class="leads-view" role="region" aria-label="Lead management" hidden>
+      <div class="leads-head">
+        <div class="leads-title">
+          <h2>Lead Management</h2>
+          <div class="lead-sub">All outreach companies · live from Supabase <code>outreach_companies</code> · click a row to edit</div>
+        </div>
+        <div id="leadCount" class="lead-count" aria-live="polite">—</div>
+      </div>
+
+      <div class="lead-toolbar">
+        <div class="lead-search">
+          <span class="ls-ic" aria-hidden="true">🔍</span>
+          <input id="leadSearch" type="search" placeholder="Search by company name…" aria-label="Search leads by company name" autocomplete="off">
+        </div>
+        <div class="lead-select-wrap">
+          <select id="leadNiche" class="lead-select" aria-label="Filter by niche">
+            <option value="all">🎯 All niches</option>
+            <option value="pest control">🐜 Pest control</option>
+            <option value="plumbers">🔧 Plumbers</option>
+            <option value="electricians">⚡ Electricians</option>
+            <option value="roofers">🏠 Roofers</option>
+            <option value="gardeners">🌿 Gardeners</option>
+          </select>
+        </div>
+        <div class="lead-select-wrap">
+          <select id="leadStatus" class="lead-select" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="not_started">Not started</option>
+            <option value="contacted">Contacted</option>
+            <option value="followed_up">Followed up</option>
+            <option value="replied">Replied</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="lead-table-wrap">
+        <div id="leadTableWrap"><div class="lead-empty">Loading leads…</div></div>
+      </div>
+    </div>
+
+    <!-- LEAD DETAIL · slide-out drawer (shared, fixed-position) -->
+    <div class="lead-backdrop" id="leadBackdrop" aria-hidden="true"></div>
+    <aside class="lead-drawer" id="leadDrawer" role="dialog" aria-modal="true" aria-label="Lead details" aria-hidden="true">
+      <div class="lead-drawer-head">
+        <h3 id="ldTitle">Lead</h3>
+        <button class="lead-drawer-close" id="leadDrawerClose" type="button" aria-label="Close panel">✕</button>
+      </div>
+      <form class="lead-drawer-body" id="leadDrawerForm" autocomplete="off">
+        <div class="ld-field">
+          <label for="ldName">Company name</label>
+          <input id="ldName" type="text" maxlength="160" required>
+        </div>
+        <div class="ld-row2">
+          <div class="ld-field">
+            <label for="ldNiche">Niche</label>
+            <select id="ldNiche">
+              <option value="pest control">Pest control</option>
+              <option value="plumbers">Plumbers</option>
+              <option value="electricians">Electricians</option>
+              <option value="roofers">Roofers</option>
+              <option value="gardeners">Gardeners</option>
+            </select>
+          </div>
+          <div class="ld-field">
+            <label for="ldSuburb">Suburb</label>
+            <input id="ldSuburb" type="text" maxlength="120">
+          </div>
+        </div>
+        <div class="ld-field">
+          <label for="ldEmail">Email</label>
+          <input id="ldEmail" type="text" maxlength="200" inputmode="email">
+        </div>
+        <div class="ld-field">
+          <label for="ldWebsite">Website</label>
+          <input id="ldWebsite" type="text" maxlength="300" inputmode="url">
+        </div>
+        <div class="ld-field">
+          <label for="ldDemo">Demo site URL</label>
+          <input id="ldDemo" type="text" maxlength="300" inputmode="url">
+        </div>
+        <div class="ld-field">
+          <label for="ldProtocol">Protocol</label>
+          <input id="ldProtocol" type="text" maxlength="160">
+        </div>
+        <div class="ld-row2">
+          <div class="ld-field">
+            <label for="ldStatus">Status</label>
+            <select id="ldStatus">
+              <option value="not_started">Not started</option>
+              <option value="contacted">Contacted</option>
+              <option value="followed_up">Followed up</option>
+              <option value="replied">Replied</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+          <div class="ld-field">
+            <label for="ldDeal">Deal value (R)</label>
+            <input id="ldDeal" type="number" min="0" step="500">
+          </div>
+        </div>
+        <div class="ld-field">
+          <label for="ldNext">Next action date</label>
+          <input id="ldNext" type="date">
+        </div>
+        <a id="ldOpenDemo" class="ld-open" href="#" target="_blank" rel="noopener">🔗 Open demo site</a>
+      </form>
+      <div class="lead-drawer-foot">
+        <button class="ld-save" id="leadDrawerSave" type="submit" form="leadDrawerForm">✓ Save changes</button>
+        <button class="ld-cancel" id="leadDrawerCancel" type="button">Cancel</button>
+      </div>
+    </aside>
 
     <footer role="contentinfo">
       Private dashboard · noindex · passcode-gated (obscurity, not encryption).<br>
@@ -2638,6 +2964,344 @@ function initClientRevenue(){
   });
 }
 
+/* ════════════════ AVATAR (Prompt 7) ════════════════ */
+// Upload to the Supabase "avatars" storage bucket, but cache the picture as a
+// base64 data-URL in localStorage so every page load paints it INSTANTLY without
+// re-reading from Supabase. The old storage object is deleted on change.
+const AVATAR_BUCKET   = "avatars";
+const AVATAR_LS_KEY   = "mc_avatar_v1";    // base64 data URL (instant paint)
+const AVATAR_PATH_KEY = "mc_avatar_path";  // storage object path of current avatar
+
+function renderAvatar(){
+  const img=$("#avatarImg"), ph=$("#avatarPh");
+  const data=localStorage.getItem(AVATAR_LS_KEY);
+  if(img && data){ img.src=data; img.style.display="block"; if(ph) ph.style.display="none"; }
+  else if(img){ img.removeAttribute("src"); img.style.display="none"; if(ph) ph.style.display="flex"; }
+}
+function fileToDataUrl(file){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
+}
+async function onAvatarPicked(file){
+  if(!file) return;
+  if(!/^image\//.test(file.type)){ toast("Please pick an image file"); return; }
+  if(file.size > 5*1024*1024){ toast("Image too large · max 5MB"); return; }
+  // 1) instant local preview + cache (don't read from Supabase on every load)
+  let dataUrl;
+  try{ dataUrl=await fileToDataUrl(file); localStorage.setItem(AVATAR_LS_KEY, dataUrl); renderAvatar(); }
+  catch(_){ toast("Couldn't read that image"); return; }
+  toast("Avatar updated ✓");
+  // 2) upload to Supabase storage (background) + 3) delete the previous object
+  if(!sb || !sb.storage){ return; }
+  const btn=$("#avatarBtn"); if(btn) btn.classList.add("uploading");
+  try{
+    const ext=((file.name.split(".").pop()||"png").toLowerCase().replace(/[^a-z0-9]/g,"")) || "png";
+    const path="avatar-"+Date.now()+"."+ext;
+    const { error } = await sb.storage.from(AVATAR_BUCKET).upload(path, file, { upsert:true, contentType:file.type });
+    if(error) throw error;
+    const oldPath=localStorage.getItem(AVATAR_PATH_KEY);
+    if(oldPath && oldPath!==path){ try{ await sb.storage.from(AVATAR_BUCKET).remove([oldPath]); }catch(_){ } }
+    localStorage.setItem(AVATAR_PATH_KEY, path);
+  }catch(e){
+    console.warn("avatar upload failed", e);
+    toast("Saved on device · cloud upload failed");
+  }finally{ if(btn) btn.classList.remove("uploading"); }
+}
+function initAvatar(){
+  const btn=$("#avatarBtn"), input=$("#avatarInput");
+  renderAvatar();
+  if(!btn || !input) return;
+  btn.addEventListener("click", ()=>input.click());
+  input.addEventListener("change", e=>{
+    const f=e.target.files && e.target.files[0];
+    if(f) onAvatarPicked(f);
+    input.value="";   // allow re-picking the same file
+  });
+}
+
+/* ════════════════ VIEW SWITCHER (Dashboard / Leads) ════════════════ */
+const VIEWS=["dashboard","leads"];
+let CURRENT_VIEW="dashboard";
+function switchView(view){
+  if(VIEWS.indexOf(view)===-1) view="dashboard";
+  CURRENT_VIEW=view;
+  const isLeads=view==="leads";
+  const dash=$("#dashboardView"), leads=$("#leadsView"), dnav=$(".dnav");
+  if(dash) dash.hidden=isLeads;
+  if(leads) leads.hidden=!isLeads;
+  if(dnav) dnav.style.display=isLeads?"none":"";
+  $$(".vn-btn").forEach(b=>{
+    const on=b.dataset.view===view;
+    b.classList.toggle("active",on);
+    b.setAttribute("aria-selected", on?"true":"false");
+  });
+  try{ localStorage.setItem("mc_view", view); }catch(_){ }
+  if(isLeads){
+    renderLeads();
+    window.scrollTo({top:0, behavior:reduceMotion()?"auto":"smooth"});
+  }
+}
+function initViewNav(){
+  $$(".vn-btn").forEach(b=>b.addEventListener("click", ()=>switchView(b.dataset.view)));
+}
+
+/* ════════════════ LEADS · CRM (Prompt 8) ════════════════ */
+const LEAD_STATUSES   = ["not_started","contacted","followed_up","replied","won","lost"];
+const LEAD_STATUS_LABEL = {
+  not_started:"Not started", contacted:"Contacted", followed_up:"Followed up",
+  replied:"Replied", won:"Won", lost:"Lost",
+  researching:"Researching", demo_built:"Demo built", call_booked:"Call booked", proposal_sent:"Proposal sent"
+};
+const LEAD_STATUS_CLS = {
+  not_started:"ls-not", researching:"ls-not", demo_built:"ls-not",
+  contacted:"ls-contacted", followed_up:"ls-followed", proposal_sent:"ls-followed",
+  call_booked:"ls-replied", replied:"ls-replied", won:"ls-won", lost:"ls-lost"
+};
+const LEAD_STATUS_RANK = {
+  not_started:0, researching:1, demo_built:2, contacted:3, followed_up:4,
+  call_booked:5, proposal_sent:6, replied:7, won:8, lost:9
+};
+const LEAD_COLS=[
+  {key:"company_name",   label:"Company"},
+  {key:"niche",          label:"Niche"},
+  {key:"suburb",         label:"Suburb"},
+  {key:"email",          label:"Email"},
+  {key:"website",        label:"Website"},
+  {key:"demo_site_url",  label:"Demo Site"},
+  {key:"protocol_name",  label:"Protocol"},
+  {key:"outreach_status",label:"Status"},
+  {key:"deal_value_zar", label:"Deal Value", num:true},
+  {key:"next_action_date",label:"Next Action"},
+];
+let LEADS_NICHE="all", LEADS_STATUS="all", LEADS_SEARCH="";
+let LEADS_SORT={key:"company_name", dir:"asc"};
+let LEAD_DRAWER_ID=null;
+
+const leadStatus = r => (r && r.outreach_status) || "not_started";
+function extUrl(u){ u=String(u||"").trim(); if(!u || u==="not_found") return ""; return /^https?:\/\//i.test(u)?u:("https://"+u); }
+function leadEmail(r){ return (r && r.email && r.email!=="not_found") ? r.email : ""; }
+
+function leadStatusOptions(cur){
+  const list=LEAD_STATUSES.slice();
+  if(list.indexOf(cur)===-1) list.unshift(cur);   // keep any legacy status visible
+  return list.map(s=>`<option value="${esc(s)}"${s===cur?" selected":""}>${esc(LEAD_STATUS_LABEL[s]||s)}</option>`).join("");
+}
+function leadCmp(a,b){
+  const k=LEADS_SORT.key, dir=LEADS_SORT.dir==="asc"?1:-1;
+  if(k==="deal_value_zar"){ return ((+a[k]||0)-(+b[k]||0))*dir; }
+  if(k==="outreach_status"){
+    const ra=LEAD_STATUS_RANK[leadStatus(a)], rb=LEAD_STATUS_RANK[leadStatus(b)];
+    return ((ra==null?99:ra)-(rb==null?99:rb))*dir;
+  }
+  if(k==="next_action_date"){ const av=a[k]||"", bv=b[k]||""; return (av<bv?-1:av>bv?1:0)*dir; }
+  const av=String(a[k]==null?"":a[k]).toLowerCase(), bv=String(b[k]==null?"":b[k]).toLowerCase();
+  return av.localeCompare(bv)*dir;
+}
+function leadsFiltered(){
+  let rows=(STATE.companies||[]).slice();
+  if(LEADS_NICHE!=="all")  rows=rows.filter(r=>r.niche===LEADS_NICHE);
+  if(LEADS_STATUS!=="all") rows=rows.filter(r=>leadStatus(r)===LEADS_STATUS);
+  const q=LEADS_SEARCH.trim().toLowerCase();
+  if(q) rows=rows.filter(r=>String(r.company_name||"").toLowerCase().indexOf(q)!==-1);
+  rows.sort(leadCmp);
+  return rows;
+}
+function updateLeadCount(shown){
+  const el=$("#leadCount"); if(!el) return;
+  const total=(STATE.companies||[]).length;
+  if(!total){ el.textContent="—"; return; }
+  el.innerHTML = (shown===total) ? `<b>${total}</b> leads` : `<b>${shown}</b> of ${total} leads`;
+}
+function leadRowHtml(r){
+  const st=leadStatus(r), cls=LEAD_STATUS_CLS[st]||"ls-not";
+  const email=leadEmail(r);
+  const web=(r.website && r.website!=="not_found") ? r.website : "";
+  const webUrl=extUrl(web), demoUrl=extUrl(r.demo_site_url), deal=(+r.deal_value_zar)||0;
+  return `<div class="lead-row" data-id="${esc(r.id)}" tabindex="0" role="row">
+    <div class="lead-cell lead-company-cell"><span class="lead-cl">Company</span><span class="lead-company">${esc(r.company_name||"—")}</span></div>
+    <div class="lead-cell"><span class="lead-cl">Niche</span><span class="lead-niche">${esc(r.niche||"—")}</span></div>
+    <div class="lead-cell"><span class="lead-cl">Suburb</span>${r.suburb?esc(r.suburb):'<span class="lead-muted">—</span>'}</div>
+    <div class="lead-cell lead-email-cell"><span class="lead-cl">Email</span>${email?`<a class="lead-link" href="mailto:${esc(email)}" title="${esc(email)}">${esc(email)}</a>`:'<span class="lead-muted">—</span>'}</div>
+    <div class="lead-cell"><span class="lead-cl">Website</span>${webUrl?`<a class="lead-link" href="${esc(webUrl)}" target="_blank" rel="noopener" title="${esc(webUrl)}">Visit ↗</a>`:'<span class="lead-muted">—</span>'}</div>
+    <div class="lead-cell"><span class="lead-cl">Demo</span>${demoUrl?`<a class="lead-link lead-demo" href="${esc(demoUrl)}" target="_blank" rel="noopener" title="${esc(demoUrl)}">Open ↗</a>`:'<span class="lead-muted">—</span>'}</div>
+    <div class="lead-cell lead-protocol-cell"><span class="lead-cl">Protocol</span><span title="${esc(r.protocol_name||"")}">${r.protocol_name?esc(r.protocol_name):'<span class="lead-muted">—</span>'}</span></div>
+    <div class="lead-cell lead-status-cell"><span class="lead-cl">Status</span>
+      <span class="lead-status ${cls}">
+        <select class="lead-status-sel" data-id="${esc(r.id)}" aria-label="Status for ${esc(r.company_name||"lead")}">${leadStatusOptions(st)}</select>
+      </span>
+    </div>
+    <div class="lead-cell num"><span class="lead-cl">Deal value</span>${deal?rand(deal):'<span class="lead-muted">—</span>'}</div>
+    <div class="lead-cell"><span class="lead-cl">Next action</span>${r.next_action_date?`<span class="lead-mono">${esc(r.next_action_date)}</span>`:'<span class="lead-muted">—</span>'}</div>
+  </div>`;
+}
+function renderLeads(){
+  const host=$("#leadTableWrap"); if(!host) return;
+  const head=`<div class="lead-thead" role="row">`+LEAD_COLS.map(c=>{
+    const active=LEADS_SORT.key===c.key;
+    const ind=active?(LEADS_SORT.dir==="asc"?"▲":"▼"):"";
+    return `<button class="lead-th${active?" active":""}${c.num?" num":""}" data-key="${c.key}" role="columnheader" aria-sort="${active?(LEADS_SORT.dir==="asc"?"ascending":"descending"):"none"}">${esc(c.label)}<span class="lead-sort">${ind}</span></button>`;
+  }).join("")+`</div>`;
+  const rows=leadsFiltered();
+  if(!rows.length){
+    const loading=!(STATE.companies||[]).length;
+    host.innerHTML=head+`<div class="lead-empty">${loading?"Loading leads…":"No leads match your filters."}</div>`;
+    updateLeadCount(0); return;
+  }
+  host.innerHTML=head+`<div class="lead-tbody">`+rows.map(leadRowHtml).join("")+`</div>`;
+  updateLeadCount(rows.length);
+}
+
+// ── WRITES ──
+function leadActionVerb(status){
+  return status==="won"?"deal_won": status==="replied"?"reply_received":
+         status==="followed_up"?"follow_up_sent": status==="contacted"?"contacted":
+         status==="lost"?"lead_lost":"status_updated";
+}
+async function logLeadActivity(r, status){
+  if(!sb) return;
+  const row={ action:leadActionVerb(status), company:r.company_name||null, details:"Status → "+(LEAD_STATUS_LABEL[status]||status) };
+  try{
+    const { data, error } = await sb.from("activity_feed").insert(row).select();
+    if(error) throw error;
+    const saved=(data && data[0]) || Object.assign({ event_time:new Date().toISOString() }, row);
+    STATE.activity=STATE.activity||[];
+    STATE.activity.unshift(saved);
+    if(STATE.activity.length>40) STATE.activity.length=40;
+    writeCache(STATE);
+    renderActivity();
+  }catch(e){ console.warn("activity log failed", e); }
+}
+// Persist a patch to outreach_companies, optimistic with rollback. On success the
+// Pipeline panel (②) re-renders so its counts move too.
+async function saveLead(id, patch, opts){
+  opts=opts||{};
+  const r=(STATE.companies||[]).find(x=>String(x.id)===String(id));
+  if(!r) return;
+  const prev={}; Object.keys(patch).forEach(k=>prev[k]=r[k]);
+  Object.assign(r, patch);                 // optimistic
+  renderLeads(); renderNiche(CURRENT_NICHE); writeCache(STATE);
+  if(!sb){ toast("Saved on device · no cloud connection"); return; }
+  try{
+    const { error } = await sb.from("outreach_companies").update(patch).eq("id", id);
+    if(error) throw error;
+    if(opts.logStatus) await logLeadActivity(r, patch.outreach_status);
+    toast(opts.toast || `${r.company_name} saved ✓`);
+  }catch(e){
+    console.warn("lead save failed", e);
+    Object.assign(r, prev);                // rollback
+    renderLeads(); renderNiche(CURRENT_NICHE); writeCache(STATE);
+    toast("Couldn't save · check connection");
+  }
+}
+async function updateLeadStatus(id, status){
+  const r=(STATE.companies||[]).find(x=>String(x.id)===String(id));
+  if(!r || leadStatus(r)===status) return;
+  await saveLead(id, { outreach_status:status }, { logStatus:true, toast:`${r.company_name} → ${LEAD_STATUS_LABEL[status]||status} ✓` });
+}
+
+// ── DRAWER ──
+function ensureOption(sel, val, labelMap){
+  if(!sel || val==null || val==="") return;
+  const exists=Array.prototype.some.call(sel.options, o=>o.value===val);
+  if(!exists){ const o=document.createElement("option"); o.value=val; o.textContent=(labelMap && labelMap[val])||val; sel.appendChild(o); }
+}
+function openLeadDrawer(id){
+  const r=(STATE.companies||[]).find(x=>String(x.id)===String(id));
+  if(!r) return;
+  LEAD_DRAWER_ID=id;
+  const set=(sel,v)=>{ const el=$(sel); if(el) el.value=v; };
+  const t=$("#ldTitle"); if(t) t.textContent=r.company_name||"Lead";
+  set("#ldName", r.company_name||"");
+  ensureOption($("#ldNiche"), r.niche); set("#ldNiche", r.niche||"pest control");
+  set("#ldSuburb", r.suburb||"");
+  set("#ldEmail", leadEmail(r));
+  set("#ldWebsite", (r.website && r.website!=="not_found") ? r.website : "");
+  set("#ldDemo", r.demo_site_url||"");
+  set("#ldProtocol", r.protocol_name||"");
+  ensureOption($("#ldStatus"), leadStatus(r), LEAD_STATUS_LABEL); set("#ldStatus", leadStatus(r));
+  set("#ldDeal", (+r.deal_value_zar)||0);
+  set("#ldNext", r.next_action_date||"");
+  const demo=$("#ldOpenDemo"), u=extUrl(r.demo_site_url);
+  if(demo){ if(u){ demo.href=u; demo.style.display="inline-flex"; } else { demo.style.display="none"; } }
+  const dr=$("#leadDrawer"), bd=$("#leadBackdrop");
+  if(dr){ dr.classList.add("open"); dr.setAttribute("aria-hidden","false"); }
+  if(bd){ bd.classList.add("show"); bd.setAttribute("aria-hidden","false"); }
+  document.body.style.overflow="hidden";
+  setTimeout(()=>{ const f=$("#ldName"); if(f) f.focus(); }, 180);
+}
+function closeLeadDrawer(){
+  const dr=$("#leadDrawer"), bd=$("#leadBackdrop");
+  if(dr){ dr.classList.remove("open"); dr.setAttribute("aria-hidden","true"); }
+  if(bd){ bd.classList.remove("show"); bd.setAttribute("aria-hidden","true"); }
+  document.body.style.overflow="";
+  LEAD_DRAWER_ID=null;
+}
+async function saveLeadDrawer(){
+  if(LEAD_DRAWER_ID==null) return;
+  const id=LEAD_DRAWER_ID;
+  const r=(STATE.companies||[]).find(x=>String(x.id)===String(id));
+  if(!r) return;
+  const val=sel=>{ const el=$(sel); return el?el.value:""; };
+  const patch={
+    company_name: (val("#ldName").trim()) || r.company_name,
+    niche: val("#ldNiche"),
+    suburb: val("#ldSuburb").trim() || null,
+    email: val("#ldEmail").trim() || null,
+    website: val("#ldWebsite").trim() || null,
+    demo_site_url: val("#ldDemo").trim() || null,
+    protocol_name: val("#ldProtocol").trim() || null,
+    outreach_status: val("#ldStatus"),
+    deal_value_zar: +val("#ldDeal") || 0,
+    next_action_date: val("#ldNext") || null
+  };
+  const statusChanged = leadStatus(r)!==patch.outreach_status;
+  const btn=$("#leadDrawerSave");
+  if(btn){ btn.disabled=true; btn.textContent="Saving…"; }
+  try{
+    await saveLead(id, patch, { logStatus:statusChanged, toast:`${patch.company_name} saved ✓` });
+    closeLeadDrawer();
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="✓ Save changes"; }
+  }
+}
+function initLeads(){
+  const niche=$("#leadNiche"), status=$("#leadStatus"), search=$("#leadSearch"), wrap=$("#leadTableWrap");
+  if(niche)  niche.addEventListener("change",  ()=>{ LEADS_NICHE=niche.value;   renderLeads(); });
+  if(status) status.addEventListener("change", ()=>{ LEADS_STATUS=status.value; renderLeads(); });
+  if(search) search.addEventListener("input",  ()=>{ LEADS_SEARCH=search.value; renderLeads(); });
+  if(wrap){
+    wrap.addEventListener("click",(e)=>{
+      const th=e.target.closest(".lead-th");
+      if(th){
+        const k=th.dataset.key;
+        if(LEADS_SORT.key===k) LEADS_SORT.dir=(LEADS_SORT.dir==="asc"?"desc":"asc");
+        else { LEADS_SORT.key=k; LEADS_SORT.dir="asc"; }
+        renderLeads(); return;
+      }
+      if(e.target.closest("a") || e.target.closest(".lead-status")) return;   // let links / status select work
+      const row=e.target.closest(".lead-row");
+      if(row) openLeadDrawer(row.dataset.id);
+    });
+    wrap.addEventListener("keydown",(e)=>{
+      if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("lead-row")){
+        e.preventDefault(); openLeadDrawer(e.target.dataset.id);
+      }
+    });
+    wrap.addEventListener("change",(e)=>{
+      const sel=e.target.closest(".lead-status-sel");
+      if(sel) updateLeadStatus(sel.dataset.id, sel.value);
+    });
+  }
+  const close=$("#leadDrawerClose"), cancel=$("#leadDrawerCancel"), bd=$("#leadBackdrop"), form=$("#leadDrawerForm");
+  if(close)  close.addEventListener("click", closeLeadDrawer);
+  if(cancel) cancel.addEventListener("click", closeLeadDrawer);
+  if(bd)     bd.addEventListener("click", closeLeadDrawer);
+  if(form)   form.addEventListener("submit",(e)=>{ e.preventDefault(); saveLeadDrawer(); });
+  document.addEventListener("keydown",(e)=>{
+    const dr=$("#leadDrawer");
+    if(e.key==="Escape" && dr && dr.classList.contains("open")) closeLeadDrawer();
+  });
+}
+
 /* ════════════════ DATA ORCHESTRATION ════════════════ */
 function applyData(){
   hasRenderedOnce = true;
@@ -2650,6 +3314,7 @@ function applyData(){
   renderWhatif();
   renderNiche(CURRENT_NICHE);
   renderActivity();
+  renderLeads();
   drawTrajectoryChart();
   drawRevenueTimeline();
   if(!SS_CHECKING) ssRender();   // refresh site list from latest companies (keeps cached statuses)
@@ -2700,6 +3365,9 @@ function boot(){
   initSiteStatus();
   initEmailAuto();
   initClientRevenue();
+  initAvatar();
+  initViewNav();
+  initLeads();
   loadOutreachPack();
 
   // restore device-local state
@@ -2725,6 +3393,10 @@ function boot(){
   const cached=readCache();
   if(cached){ Object.assign(STATE, cached); applyData(); setStamp("cached"); }
   else { setStamp("cached"); $("#liveStamp").textContent="loading…"; }
+
+  // restore last-used view (Dashboard / Leads)
+  try{ if(localStorage.getItem("mc_view")==="leads") switchView("leads"); }catch(_){ }
+
   refreshData();
 }
 
