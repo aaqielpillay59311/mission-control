@@ -3,9 +3,8 @@
   ════════════════════════════════════════════════════════════
   MISSION CONTROL · BUILD QUEUE (remaining prompts) — for Claude Code
   ════════════════════════════════════════════════════════════
-  DONE:  1 Scaffold/dashboard · 2 Supabase wiring · 3 Import 100 outreach companies · 4 Website Status panel · 5 Email/Cron/Telegram monitoring (Resend via /api proxy)
+  DONE:  1 Scaffold/dashboard · 2 Supabase wiring · 3 Import 100 outreach companies · 4 Website Status panel · 5 Email/Cron/Telegram monitoring (Resend via /api proxy) · 6 Client Revenue tracking (clients table → ⑦ panel, MRR mirrors paid clients)
   TODO:
-    - Prompt 6:  Add Client Revenue tracking
     - Prompt 7:  Add storage bucket for avatar
     - Prompt 8:  Add lead management page
     - Prompt 9:  Add chatbot
@@ -717,6 +716,99 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .ea-empty{font-family:var(--mono);font-size:11px;color:var(--txt-4);padding:var(--s5) 0}
 .ea-retry{display:inline-flex;align-items:center;gap:6px;background:var(--glass-2);border:1px solid var(--border-2);color:var(--txt);font-family:var(--sans);font-weight:700;font-size:11.5px;padding:9px 16px;border-radius:var(--r-full);cursor:pointer;min-height:40px;transition:background var(--t-fast),border-color var(--t-fast)}
 .ea-retry:hover{background:var(--green-subtle);border-color:var(--border-glow)}
+
+/* ════════════════ CLIENT REVENUE (⑦) ════════════════ */
+.cr-add-btn{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;border:none;font-family:var(--sans);font-weight:800;font-size:12.5px;letter-spacing:.02em;padding:10px 18px;border-radius:var(--r-full);cursor:pointer;min-height:40px;transition:transform var(--t-fast),box-shadow var(--t-fast),filter var(--t-fast);white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.cr-add-btn:hover{transform:translateY(-2px);box-shadow:var(--sh-glow);filter:brightness(1.08)}
+.cr-add-btn:active{transform:translateY(0)}
+.cr-add-btn .cr-plus{font-size:15px;line-height:1;transition:transform var(--t-base)}
+.cr-add-btn.open{background:var(--glass-2);color:var(--txt-2);box-shadow:none}
+.cr-add-btn.open:hover{background:var(--surface-3);color:var(--txt);transform:none}
+.cr-add-btn.open .cr-plus{transform:rotate(45deg)}
+
+/* summary stats */
+.cr-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s3);margin-bottom:var(--s5);position:relative;z-index:1}
+@media(max-width:760px){.cr-summary{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:380px){.cr-summary{grid-template-columns:1fr}}
+.cr-stat{background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s4) var(--s3);transition:background var(--t-fast),border-color var(--t-fast),transform var(--t-fast)}
+.cr-stat:hover{background:var(--glass-2);border-color:var(--border-2);transform:translateY(-2px)}
+@media(hover:none){.cr-stat:hover{transform:none}}
+.cr-stat.is-mrr{border-color:var(--border-glow);background:var(--green-subtle)}
+.cr-stat .cr-stat-n{font-family:var(--mono);font-size:clamp(17px,3.4vw,21px);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.cr-stat .cr-stat-l{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--txt-4);font-weight:700;margin-top:6px;display:flex;align-items:center;gap:5px}
+
+/* add-client form (collapsible) */
+.cr-form{overflow:hidden;max-height:0;opacity:0;transition:max-height var(--t-slow),opacity var(--t-base),margin var(--t-base);position:relative;z-index:1}
+.cr-form.open{max-height:880px;opacity:1;margin-bottom:var(--s6)}
+.cr-form-inner{background:var(--surface-2);border:1px solid var(--border-glow);border-radius:var(--r-lg);padding:var(--s5);margin-top:var(--s2)}
+.cr-form-title{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--txt-2);font-weight:700;margin-bottom:var(--s4)}
+.cr-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+@media(max-width:560px){.cr-form-grid{grid-template-columns:1fr}}
+.cr-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.cr-field.cr-span2{grid-column:1 / -1}
+.cr-field label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);font-weight:700}
+.cr-field input,.cr-field select{width:100%;min-height:46px;background:rgba(255,255,255,.03);border:1.5px solid var(--border);color:var(--txt);font-family:var(--sans);font-size:14px;padding:11px 13px;border-radius:var(--r-md);outline:none;transition:border-color var(--t-fast),box-shadow var(--t-fast),background var(--t-fast)}
+.cr-field input::placeholder{color:var(--txt-4)}
+.cr-field input:focus,.cr-field select:focus{border-color:var(--green);background:rgba(34,197,94,.05);box-shadow:0 0 0 3px var(--green-glow)}
+.cr-field select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2322c55e' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.cr-field select option{background:#0c0e16;color:var(--txt)}
+.cr-field .cr-fee-wrap{position:relative;display:flex;align-items:center}
+.cr-field .cr-fee-wrap .cr-cur{position:absolute;left:13px;font-family:var(--mono);color:var(--txt-4);font-size:14px;pointer-events:none}
+.cr-field .cr-fee-wrap input{padding-left:28px}
+.cr-form-actions{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s5);flex-wrap:wrap}
+.cr-submit{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,var(--green),var(--green-d));color:#05140a;border:none;font-family:var(--sans);font-weight:800;font-size:13px;padding:12px 22px;border-radius:var(--r-md);cursor:pointer;min-height:46px;transition:transform var(--t-fast),box-shadow var(--t-fast),filter var(--t-fast)}
+.cr-submit:hover{transform:translateY(-2px);box-shadow:var(--sh-glow);filter:brightness(1.08)}
+.cr-submit:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none;filter:none}
+.cr-cancel{background:none;border:none;color:var(--txt-4);font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;padding:8px;transition:color var(--t-fast)}
+.cr-cancel:hover{color:var(--txt-2)}
+
+/* clients table (desktop) → cards (mobile) */
+.cr-table{position:relative;z-index:1}
+.cr-thead,.cr-row{display:grid;grid-template-columns:1.5fr 1fr 1.3fr .95fr 1.1fr .9fr;gap:var(--s3);align-items:center}
+.cr-thead{padding:0 var(--s3) var(--s3);border-bottom:1px solid var(--border-2)}
+.cr-thead span{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--txt-4);font-weight:700}
+.cr-thead span.cr-num,.cr-row .cr-cell.cr-num{text-align:right;justify-self:end}
+.cr-row{padding:var(--s4) var(--s3);border-bottom:1px solid var(--border);transition:background var(--t-fast)}
+.cr-row:last-child{border-bottom:none}
+.cr-row:hover{background:var(--glass)}
+@media(hover:none){.cr-row:hover{background:transparent}}
+.cr-cell{min-width:0;font-size:13px;color:var(--txt-2)}
+.cr-cell .cr-cl{display:none}
+.cr-cell.cr-company strong{font-size:13.5px;font-weight:700;color:var(--txt);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-cell.cr-company .cr-co-since{font-family:var(--mono);font-size:10px;color:var(--txt-4);margin-top:2px}
+.cr-cell .cr-niche{font-size:11px;color:var(--txt-3);text-transform:capitalize}
+.cr-cell .cr-plan-name{font-size:12px;color:var(--txt-2);font-weight:600}
+.cr-cell .cr-plan-price{font-family:var(--mono);font-size:10px;color:var(--txt-4);margin-top:1px}
+.cr-cell.cr-fee{font-family:var(--mono);font-size:13.5px;font-weight:800;color:var(--txt)}
+.cr-cell.cr-date{font-family:var(--mono);font-size:11.5px;color:var(--txt-3)}
+
+/* payment-status pill that is also a <select> */
+.cr-status{position:relative;display:inline-flex;align-items:center}
+.cr-status select{appearance:none;-webkit-appearance:none;font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:capitalize;padding:5px 24px 5px 11px;border-radius:var(--r-full);cursor:pointer;outline:none;border:1px solid transparent;transition:filter var(--t-fast),box-shadow var(--t-fast)}
+.cr-status select:hover{filter:brightness(1.12)}
+.cr-status select:focus{box-shadow:0 0 0 3px var(--green-glow)}
+.cr-status select option{background:#0c0e16;color:var(--txt);font-weight:600}
+.cr-status::after{content:"▾";position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:8px;opacity:.75}
+.cr-status.paid select{background:var(--green-subtle);color:var(--green-bright);border-color:var(--border-glow)}
+.cr-status.pending select{background:var(--amber-subtle);color:var(--amber);border-color:rgba(251,191,36,.3)}
+.cr-status.overdue select{background:var(--red-subtle);color:var(--red);border-color:var(--red-d)}
+.cr-status.cancelled select{background:rgba(255,255,255,.04);color:var(--txt-4);border-color:var(--border)}
+
+.cr-empty{text-align:center;padding:var(--s10) var(--s4);position:relative;z-index:1}
+.cr-empty .cr-empty-ic{font-size:34px;display:block;margin-bottom:var(--s3);filter:grayscale(.2) drop-shadow(0 0 14px var(--green-glow))}
+.cr-empty p{font-size:13px;color:var(--txt-3);font-family:var(--mono)}
+.cr-note{font-size:11px;color:var(--txt-4);margin-top:var(--s6);line-height:1.7;border-top:1px solid var(--border);padding-top:var(--s4);position:relative;z-index:1}
+
+@media(max-width:720px){
+  .cr-thead{display:none}
+  .cr-row{grid-template-columns:1fr 1fr;gap:var(--s3) var(--s4);padding:var(--s5) var(--s4);background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:var(--s3)}
+  .cr-row:hover{background:var(--glass)}
+  .cr-cell{display:flex;flex-direction:column;gap:3px}
+  .cr-cell.cr-company{grid-column:1 / -1}
+  .cr-cell.cr-num{text-align:left;justify-self:start}
+  .cr-cell .cr-cl{display:block;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-4);font-weight:700}
+  .cr-cell.cr-status-cell{grid-column:1 / -1}
+}
 </style>
 </head>
 <body>
@@ -760,6 +852,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
         <a href="#revenueSection"><span class="qn">03</span> Revenue to freedom</a>
         <a href="#siteStatusSection"><span class="qn">05</span> Site status</a>
         <a href="#emailAutoSection"><span class="qn">06</span> Email &amp; cron</a>
+        <a href="#clientRevSection"><span class="qn">07</span> Client revenue</a>
       </nav>
       <div class="status" aria-live="polite">
         <span class="dot" id="statusDot" aria-hidden="true"></span>
@@ -1169,6 +1262,91 @@ If you'd rather I not contact you again, just reply 'stop'.</pre>
       </div>
     </div>
 
+    <!-- ═══ DECISION 07 · CLIENT REVENUE ═══ -->
+    <div class="section" id="clientRevSection">
+      <div class="panel" id="clientRev" role="region" aria-label="Client revenue tracker">
+        <div class="panel-head">
+          <span class="panel-label"><span class="ic">⑦</span> Client Revenue</span>
+          <button class="cr-add-btn" id="crAddBtn" type="button" aria-expanded="false" aria-controls="crForm">
+            <span class="cr-plus" aria-hidden="true">+</span><span class="cr-add-lbl">Add Client</span>
+          </button>
+        </div>
+
+        <!-- REVENUE SUMMARY -->
+        <div class="cr-summary" id="crSummary" aria-label="Client revenue summary">
+          <div class="cr-stat is-mrr"><div class="cr-stat-n grn" id="crMrr">R0</div><div class="cr-stat-l">💰 Paid MRR</div></div>
+          <div class="cr-stat"><div class="cr-stat-n amb" id="crPending">R0</div><div class="cr-stat-l">⏳ Pending</div></div>
+          <div class="cr-stat"><div class="cr-stat-n red" id="crOverdue">R0</div><div class="cr-stat-l">⚠️ Overdue</div></div>
+          <div class="cr-stat"><div class="cr-stat-n" id="crActive">0</div><div class="cr-stat-l">👥 Active</div></div>
+          <div class="cr-stat"><div class="cr-stat-n blue" id="crAvg">R0</div><div class="cr-stat-l">📊 Avg deal</div></div>
+        </div>
+
+        <!-- ADD CLIENT FORM (collapsible) -->
+        <div class="cr-form" id="crForm" role="region" aria-label="Add a new client">
+          <form class="cr-form-inner" id="crFormEl" autocomplete="off">
+            <div class="cr-form-title">New client</div>
+            <div class="cr-form-grid">
+              <div class="cr-field cr-span2">
+                <label for="crCompany">Company name</label>
+                <input id="crCompany" name="company" type="text" required maxlength="120" placeholder="e.g. Apex Pest Solutions">
+              </div>
+              <div class="cr-field">
+                <label for="crNiche">Niche</label>
+                <select id="crNiche" name="niche">
+                  <option value="pest control">Pest control</option>
+                  <option value="plumbers">Plumbers</option>
+                  <option value="electricians">Electricians</option>
+                  <option value="roofers">Roofers</option>
+                  <option value="gardeners">Gardeners</option>
+                </select>
+              </div>
+              <div class="cr-field">
+                <label for="crPlan">Plan</label>
+                <select id="crPlan" name="plan">
+                  <option value="website">Website (R2,500)</option>
+                  <option value="website_plus_reviews">Website + Reviews (R5,000)</option>
+                  <option value="full_stack">Full Stack (R6,500)</option>
+                </select>
+              </div>
+              <div class="cr-field">
+                <label for="crFee">Monthly fee</label>
+                <div class="cr-fee-wrap">
+                  <span class="cr-cur" aria-hidden="true">R</span>
+                  <input id="crFee" name="fee" type="number" min="0" step="500" value="2500" required aria-label="Monthly fee in Rand">
+                </div>
+              </div>
+              <div class="cr-field">
+                <label for="crStart">Start date</label>
+                <input id="crStart" name="start" type="date">
+              </div>
+              <div class="cr-field">
+                <label for="crStatus">Payment status</label>
+                <select id="crStatus" name="status">
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div class="cr-form-actions">
+              <button class="cr-submit" id="crSubmit" type="submit">✓ Add Client</button>
+              <button class="cr-cancel" id="crCancel" type="button">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- CLIENT TABLE / CARDS -->
+        <div class="cr-table" id="crTable" aria-live="polite">
+          <div class="ea-loading"><span class="spinner" aria-hidden="true"></span> Loading clients…</div>
+        </div>
+
+        <div class="cr-note">
+          Paid clients feed the <a href="#revenueSection" style="color:var(--green);text-decoration:none">Revenue Tracker</a> — its MRR reflects the sum of <b>monthly fees where status = paid</b>. Adding a client or marking one paid updates it automatically. Data lives in Supabase <code>clients</code>.
+        </div>
+      </div>
+    </div>
+
     <footer role="contentinfo">
       Private dashboard · noindex · passcode-gated (obscurity, not encryption).<br>
       Live data from <code>Supabase</code> · cached in this session · MRR synced to <code>revenue_log</code>. Change passcode: see <code>README.md</code>.
@@ -1191,7 +1369,7 @@ try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
 catch(e){ console.warn("Supabase client failed to initialise", e); }
 
 /* ──────────── LIVE STATE — everything comes from the database ──────────── */
-const STATE = { debt:[], companies:[], revenue:[], activity:[], finance:null };
+const STATE = { debt:[], companies:[], revenue:[], activity:[], finance:null, clients:[] };
 let ANIM_ON = true;          // count-up animation only on first paint
 let hasRenderedOnce = false;
 
@@ -1217,26 +1395,31 @@ function recompute(){
 }
 
 /* ──────────── SESSION CACHE (instant paint, fewer DB reads) ──────────── */
-const CACHE_KEY = "mc_cache_v2";
+const CACHE_KEY = "mc_cache_v3";
 function readCache(){ try { return JSON.parse(sessionStorage.getItem(CACHE_KEY)); } catch(_){ return null; } }
-function writeCache(d){ try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({debt:d.debt,companies:d.companies,revenue:d.revenue,activity:d.activity,finance:d.finance})); } catch(_){ } }
+function writeCache(d){ try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({debt:d.debt,companies:d.companies,revenue:d.revenue,activity:d.activity,finance:d.finance,clients:d.clients})); } catch(_){ } }
 function hasData(){ return !!(STATE.finance || (STATE.debt && STATE.debt.length)); }
 
 /* ──────────── FETCH ALL FIVE TABLES ──────────── */
 async function fetchAll(){
   if(!sb) throw new Error("Supabase client unavailable");
-  const [debt, companies, revenue, activity, finance] = await Promise.all([
+  const [debt, companies, revenue, activity, finance, clients] = await Promise.all([
     sb.from("debt_accounts").select("*"),
     sb.from("outreach_companies").select("*"),
     sb.from("revenue_log").select("*").order("month",{ascending:false}),
     sb.from("activity_feed").select("*").order("event_time",{ascending:false}).limit(40),
-    sb.from("financial_snapshot").select("*").order("snapshot_date",{ascending:false}).limit(1)
+    sb.from("financial_snapshot").select("*").order("snapshot_date",{ascending:false}).limit(1),
+    sb.from("clients").select("*").order("created_at",{ascending:false})
   ]);
+  // clients is intentionally excluded from this check — a missing table (before the
+  // SQL is run) must NOT take down the rest of the dashboard.
   const bad = [debt,companies,revenue,activity,finance].find(r=>r.error);
   if(bad) throw bad.error;
+  if(clients && clients.error) console.warn("clients table not reachable yet", clients.error);
   return {
     debt: debt.data||[], companies: companies.data||[], revenue: revenue.data||[],
-    activity: activity.data||[], finance: (finance.data && finance.data[0]) || null
+    activity: activity.data||[], finance: (finance.data && finance.data[0]) || null,
+    clients: (clients && !clients.error && clients.data) ? clients.data : []
   };
 }
 
@@ -2282,6 +2465,179 @@ function initEmailAuto(){
   eaRefreshAll(false);
 }
 
+/* ════════════════ CLIENT REVENUE (⑦) ════════════════ */
+// Actual paying clients live in the Supabase `clients` table (browser-side, anon
+// key). Total MRR = sum(monthly_fee_zar where payment_status = 'paid'); that sum
+// is mirrored into the Revenue Tracker (③) MRR input so the whole dashboard moves
+// off real clients. Add + status-change write straight to Supabase.
+const CR_PLANS = {
+  website:              { label:"Website",           price:2500 },
+  website_plus_reviews: { label:"Website + Reviews", price:5000 },
+  full_stack:           { label:"Full Stack",        price:6500 },
+};
+const CR_STATUSES = ["paid","pending","overdue","cancelled"];
+const crCap = s => String(s||"").charAt(0).toUpperCase()+String(s||"").slice(1);
+
+function crPaidMRR(){
+  return (STATE.clients||[]).filter(c=>c.payment_status==="paid")
+    .reduce((s,c)=>s+(+c.monthly_fee_zar||0),0);
+}
+function crFmtDate(d){
+  if(!d) return "—";
+  const dt=new Date(String(d)+"T00:00:00");
+  if(isNaN(dt.getTime())) return "—";
+  return dt.toLocaleDateString("en-ZA",{day:"2-digit",month:"short",year:"numeric"});
+}
+
+// ── SUMMARY ──
+function renderClientSummary(){
+  const cs=STATE.clients||[];
+  const sumOf=st=>cs.filter(c=>c.payment_status===st).reduce((s,c)=>s+(+c.monthly_fee_zar||0),0);
+  const active=cs.filter(c=>c.payment_status!=="cancelled");
+  const avg=active.length ? Math.round(active.reduce((s,c)=>s+(+c.monthly_fee_zar||0),0)/active.length) : 0;
+  const set=(id,v)=>{ const el=$(id); if(el) el.textContent=v; };
+  set("#crMrr", rand(sumOf("paid")));
+  set("#crPending", rand(sumOf("pending")));
+  set("#crOverdue", rand(sumOf("overdue")));
+  set("#crActive", String(active.length));
+  set("#crAvg", rand(avg));
+}
+
+// ── TABLE / CARDS ──
+function renderClientTable(){
+  const host=$("#crTable"); if(!host) return;
+  const cs=STATE.clients||[];
+  if(!cs.length){
+    host.innerHTML=`<div class="cr-empty"><span class="cr-empty-ic" aria-hidden="true">🏆</span><p>No clients yet. Your first conversion will appear here.</p></div>`;
+    return;
+  }
+  const head=`<div class="cr-thead" aria-hidden="true">
+    <span>Company</span><span>Niche</span><span>Plan</span>
+    <span class="cr-num">Monthly fee</span><span>Status</span><span>Start date</span>
+  </div>`;
+  const rows=cs.map(c=>{
+    const plan=CR_PLANS[c.plan]||{label:c.plan||"—"};
+    const st=c.payment_status||"pending";
+    const opts=CR_STATUSES.map(s=>`<option value="${s}"${s===st?" selected":""}>${crCap(s)}</option>`).join("");
+    return `<div class="cr-row">
+      <div class="cr-cell cr-company"><span class="cr-cl">Company</span><strong>${esc(c.company_name)}</strong></div>
+      <div class="cr-cell"><span class="cr-cl">Niche</span><span class="cr-niche">${esc(c.niche||"—")}</span></div>
+      <div class="cr-cell"><span class="cr-cl">Plan</span><span class="cr-plan-name">${esc(plan.label)}</span></div>
+      <div class="cr-cell cr-num cr-fee"><span class="cr-cl">Monthly fee</span>${rand(+c.monthly_fee_zar||0)}</div>
+      <div class="cr-cell cr-status-cell"><span class="cr-cl">Status</span>
+        <span class="cr-status ${esc(st)}">
+          <select class="cr-status-sel" data-id="${esc(c.id)}" aria-label="Payment status for ${esc(c.company_name)}">${opts}</select>
+        </span>
+      </div>
+      <div class="cr-cell cr-date"><span class="cr-cl">Start date</span>${esc(crFmtDate(c.start_date))}</div>
+    </div>`;
+  }).join("");
+  host.innerHTML=head+rows;
+}
+function renderClients(){ renderClientSummary(); renderClientTable(); }
+
+// ── LINK TO REVENUE TRACKER (③) ──
+// Mirror the sum of PAID clients' monthly fees into the MRR input. force=true (an
+// add / status change) always reflects, even to R0; force=false (passive load)
+// leaves a manually-typed MRR alone when there are no paid clients yet.
+function syncMrrFromClients(force){
+  const input=$("#mrr"); if(!input) return;
+  const paid=crPaidMRR();
+  if(!force && paid<=0) return;
+  if((+input.value||0)===paid) return;
+  input.value = paid ? paid : "";
+  localStorage.setItem("mc_mrr", paid ? String(paid) : "");
+  renderRevenue();
+  scheduleMrrSave();
+}
+
+// ── WRITES ──
+async function crAddClient(payload){
+  if(!sb) throw new Error("Supabase client unavailable");
+  const { data, error } = await sb.from("clients").insert(payload).select();
+  if(error) throw error;
+  const row=(data && data[0]) || Object.assign({ id:"local-"+Date.now() }, payload);
+  STATE.clients = STATE.clients || [];
+  STATE.clients.unshift(row);
+  writeCache(STATE);
+  renderClients();
+  syncMrrFromClients(true);
+}
+async function crUpdateStatus(id, status){
+  const c=(STATE.clients||[]).find(x=>String(x.id)===String(id));
+  if(!c || c.payment_status===status) return;
+  const prev=c.payment_status;
+  c.payment_status=status;                 // optimistic
+  renderClients(); writeCache(STATE); syncMrrFromClients(true);
+  if(!sb){ toast("Saved on device · no cloud connection"); return; }
+  try{
+    const { error } = await sb.from("clients").update({ payment_status:status }).eq("id", id);
+    if(error) throw error;
+    toast(`${c.company_name} → ${status} ✓`);
+  }catch(e){
+    console.warn("client status update failed", e);
+    c.payment_status=prev;                 // roll back
+    renderClients(); writeCache(STATE); syncMrrFromClients(true);
+    toast("Couldn't update status · check connection");
+  }
+}
+
+function initClientRevenue(){
+  const addBtn=$("#crAddBtn"), form=$("#crForm"), formEl=$("#crFormEl");
+  const planSel=$("#crPlan"), feeInput=$("#crFee");
+  if(!addBtn || !form || !formEl) return;
+
+  function openForm(open){
+    form.classList.toggle("open", open);
+    addBtn.classList.toggle("open", open);
+    addBtn.setAttribute("aria-expanded", open?"true":"false");
+    const lbl=$("#crAddBtn .cr-add-lbl"); if(lbl) lbl.textContent = open ? "Close" : "Add Client";
+    if(open){
+      setTimeout(()=>{ const f=$("#crCompany"); if(f) f.focus(); }, 140);
+      form.scrollIntoView({behavior:reduceMotion()?"auto":"smooth", block:"nearest"});
+    }
+  }
+  addBtn.addEventListener("click", ()=>openForm(!form.classList.contains("open")));
+  const cancel=$("#crCancel"); if(cancel) cancel.addEventListener("click", ()=>openForm(false));
+
+  // Plan → auto-fill the monthly fee with that plan's price (user can still edit).
+  planSel.addEventListener("change", ()=>{ const p=CR_PLANS[planSel.value]; if(p) feeInput.value=p.price; });
+
+  formEl.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const company=($("#crCompany").value||"").trim();
+    if(!company){ $("#crCompany").focus(); return; }
+    const payload={
+      company_name: company,
+      niche: $("#crNiche").value || null,
+      plan: planSel.value,
+      monthly_fee_zar: +feeInput.value || 0,
+      payment_status: $("#crStatus").value,
+      start_date: $("#crStart").value || null
+    };
+    const btn=$("#crSubmit");
+    btn.disabled=true; btn.textContent="Adding…";
+    try{
+      await crAddClient(payload);
+      toast("Client added!");
+      formEl.reset();
+      const p=CR_PLANS[planSel.value]; feeInput.value = p ? p.price : 2500;
+      openForm(false);
+    }catch(err){
+      console.warn("add client failed", err);
+      toast("Couldn't add client · check connection");
+    }finally{
+      btn.disabled=false; btn.textContent="✓ Add Client";
+    }
+  });
+
+  // Delegated: changing any row's status <select> persists + re-syncs MRR.
+  $("#crTable").addEventListener("change", (e)=>{
+    const sel=e.target.closest(".cr-status-sel");
+    if(sel) crUpdateStatus(sel.dataset.id, sel.value);
+  });
+}
+
 /* ════════════════ DATA ORCHESTRATION ════════════════ */
 function applyData(){
   hasRenderedOnce = true;
@@ -2289,6 +2645,8 @@ function applyData(){
   seedMrrFromDb();
   renderDebt();
   renderRevenue();
+  renderClients();
+  syncMrrFromClients(false);
   renderWhatif();
   renderNiche(CURRENT_NICHE);
   renderActivity();
@@ -2320,7 +2678,7 @@ async function refreshData(){
   setRefreshing(true);
   try{
     const data=await fetchAll();
-    const before=JSON.stringify({debt:STATE.debt,companies:STATE.companies,revenue:STATE.revenue,activity:STATE.activity,finance:STATE.finance});
+    const before=JSON.stringify({debt:STATE.debt,companies:STATE.companies,revenue:STATE.revenue,activity:STATE.activity,finance:STATE.finance,clients:STATE.clients});
     Object.assign(STATE, data);
     writeCache(STATE);
     if(before!==JSON.stringify(data) || !hasRenderedOnce) applyData();
@@ -2341,6 +2699,7 @@ function boot(){
   initRefresh();
   initSiteStatus();
   initEmailAuto();
+  initClientRevenue();
   loadOutreachPack();
 
   // restore device-local state
